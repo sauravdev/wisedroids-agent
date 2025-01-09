@@ -176,6 +176,12 @@ export function Header() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                  to="/socialmedia"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                >
+                  Social Media
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"

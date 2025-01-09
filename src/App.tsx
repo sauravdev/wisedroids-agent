@@ -16,6 +16,7 @@ import { HowItWorks } from './pages/HowItWorks';
 import { UseCases } from './pages/UseCases';
 import { Pricing } from './pages/Pricing';
 import { useAuth } from './hooks/useAuth';
+import { SocialMedia } from './pages/SocialMedia';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -78,6 +79,14 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
+                </PrivateRoute>
+              } 
+            />
+            <Route 
+              path="/socialmedia/*" 
+              element={
+                <PrivateRoute>
+                  <SocialMedia />
                 </PrivateRoute>
               } 
             />
