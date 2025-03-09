@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu as MenuIcon, X, User, LogOut, Bot } from 'lucide-react';
+import { Menu as MenuIcon, X, User, LogOut, Bot, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
@@ -38,11 +38,21 @@ export function Header() {
     setIsProfileMenuOpen(false);
   };
 
+  const handlePricingClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (location.pathname !== '/') {
+      navigate('/?scrollTo=pricing');
+    } else {
+      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
+  };
+
   const navigation = [
     { name: 'Features', href: '/features' },
     { name: 'How It Works', href: '/how-it-works' },
     { name: 'Use Cases', href: '/use-cases' },
-    { name: 'Pricing', href: '/pricing' },
+    { name: 'Pricing', href: '/#pricing', onClick: handlePricingClick },
     { name: 'Agent Hub', href: '/agent-hub' },
   ];
 
@@ -64,11 +74,20 @@ export function Header() {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={item.onClick}
                 className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
                 {item.name}
               </Link>
             ))}
+            {user && (
+              <Link
+                to="/dashboard"
+                className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Dashboard
+              </Link>
+            )}
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -92,24 +111,18 @@ export function Header() {
                     <div className="py-1">
                       <Link
                         to="/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileMenuOpen(false)}
                       >
+                        <LayoutDashboard className="h-4 w-4" />
                         Dashboard
-                      </Link>
-                      <Link
-                        to="/socialmedia"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Social Media
                       </Link>
                       <button
                         onClick={handleSignOut}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        <div className="flex items-center gap-2">
-                          <LogOut className="h-4 w-4" />
-                          Sign Out
-                        </div>
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
                       </button>
                     </div>
                   </div>
@@ -163,11 +176,21 @@ export function Header() {
               <Link
                 key={item.name}
                 to={item.href}
+                onClick={item.onClick}
                 className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
               >
                 {item.name}
               </Link>
             ))}
+            {user && (
+              <Link
+                to="/dashboard"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
           </div>
           
           <div className="pt-4 pb-3 border-t border-gray-200">
@@ -179,14 +202,9 @@ export function Header() {
                 <Link
                   to="/dashboard"
                   className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
-                </Link>
-                <Link
-                  to="/socialmedia"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-                >
-                  Social Media
                 </Link>
                 <button
                   onClick={handleSignOut}

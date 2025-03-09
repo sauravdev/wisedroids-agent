@@ -14,9 +14,7 @@ import { Dashboard } from './pages/dashboard';
 import { Features } from './pages/Features';
 import { HowItWorks } from './pages/HowItWorks';
 import { UseCases } from './pages/UseCases';
-import { Pricing } from './pages/Pricing';
 import { useAuth } from './hooks/useAuth';
-import { SocialMedia } from './pages/SocialMedia';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -56,7 +54,6 @@ export default function App() {
             <Route path="/features" element={<Features />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/use-cases" element={<UseCases />} />
-            <Route path="/pricing" element={<Pricing />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route 
               path="/login" 
@@ -79,14 +76,6 @@ export default function App() {
               element={
                 <PrivateRoute>
                   <Dashboard />
-                </PrivateRoute>
-              } 
-            />
-            <Route 
-              path="/socialmedia/*" 
-              element={
-                <PrivateRoute>
-                  <SocialMedia />
                 </PrivateRoute>
               } 
             />

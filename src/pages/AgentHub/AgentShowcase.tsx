@@ -11,7 +11,7 @@ export function AgentShowcase() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">Featured Agents</h2>
-          <p className="text-xl text-gray-600">Explore our most popular AI agents</p>
+          <p className="text-xl text-gray-600">Discover powerful AI agents developed using the WiseDroids platform</p>
         </div>
 
         {loading ? (
@@ -21,7 +21,7 @@ export function AgentShowcase() {
         ) : featuredAgents.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <h3 className="text-lg font-medium text-gray-900">No featured agents yet</h3>
-            <p className="mt-2 text-gray-500">Check back soon for featured agents!</p>
+            <p className="mt-2 text-gray-500">Be the first to showcase your AI agent built with WiseDroids!</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">

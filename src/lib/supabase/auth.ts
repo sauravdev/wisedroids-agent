@@ -6,7 +6,7 @@ export async function signUp(email: string, password: string, fullName: string) 
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${window.location.origin}`
+      emailRedirectTo: 'https://graceful-caramel-172c8b.netlify.app/auth/callback'
     }
   });
 
@@ -26,7 +26,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}`,
+      redirectTo: 'https://graceful-caramel-172c8b.netlify.app/auth/callback',
       queryParams: {
         access_type: 'offline',
         prompt: 'consent'

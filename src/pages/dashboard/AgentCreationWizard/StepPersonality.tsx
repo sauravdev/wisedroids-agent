@@ -1,71 +1,53 @@
 import React from 'react';
 
-interface PersonalityTrait {
-  id: string;
-  name: string;
-  min: string;
-  max: string;
-}
-
 interface StepPersonalityProps {
   traits: Record<string, number>;
   setTraits: (traits: Record<string, number>) => void;
 }
 
-const personalityTraits: PersonalityTrait[] = [
-  {
-    id: 'formality',
-    name: 'Communication Style',
-    min: 'Casual',
-    max: 'Formal'
-  },
-  {
-    id: 'detail',
-    name: 'Response Detail',
-    min: 'Concise',
-    max: 'Detailed'
-  },
-  {
-    id: 'proactivity',
-    name: 'Initiative Level',
-    min: 'Reactive',
-    max: 'Proactive'
-  }
-];
-
 export function StepPersonality({ traits, setTraits }: StepPersonalityProps) {
-  const handleTraitChange = (id: string, value: number) => {
-    setTraits({ ...traits, [id]: value });
+  const handleTraitsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const lines = e.target.value.split('\n').filter(line => line.trim() !== '');
+    const newTraits: Record<string, number> = {};
+    
+    lines.forEach(line => {
+      const [trait, value] = line.split(':').map(s => s.trim());
+      if (trait && !isNaN(Number(value))) {
+        newTraits[trait] = Number(value);
+      }
+    });
+    
+    setTraits(newTraits);
   };
+
+  const traitsText = Object.entries(traits)
+    .map(([trait, value]) => `${trait}: ${value}`)
+    .join('\n');
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-900">Personality Traits</h2>
-      <p className="text-gray-600">Customize how your AI agent interacts and communicates.</p>
+      <h2 className="text-2xl font-bold text-gray-900">Agent Personality</h2>
+      <p className="text-gray-600">
+        Describe your agent's personality traits using a scale from 0 to 100.
+        Format: Trait: Value (one per line)
+      </p>
       
-      <div className="space-y-6 mt-4">
-        {personalityTraits.map((trait) => (
-          <div key={trait.id} className="space-y-2">
-            <div className="flex justify-between">
-              <label className="font-medium text-gray-700">{trait.name}</label>
-              <span className="text-sm text-gray-500">
-                {trait.min} - {trait.max}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={traits[trait.id] || 50}
-              onChange={(e) => handleTraitChange(trait.id, parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-            />
-            <div className="flex justify-between text-sm text-gray-500">
-              <span>{trait.min}</span>
-              <span>{trait.max}</span>
-            </div>
-          </div>
-        ))}
+      <div>
+        <label htmlFor="personality" className="block text-sm font-medium text-gray-700 mb-2">
+          Personality Traits
+        </label>
+        <textarea
+          id="personality"
+          value={traitsText}
+          onChange={handleTraitsChange}
+          rows={6}
+          placeholder="Example:
+Formality: 80
+Friendliness: 90
+Conciseness: 70
+Creativity: 85"
+          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        />
       </div>
     </div>
   );
