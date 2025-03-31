@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteAgent } from '@/lib/supabase/agents';
+import { deleteDeployedAgent } from '@/lib/render/deploy';
 
 export function useAgentActions() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string,service_id:string| null) => {
     if (!window.confirm('Are you sure you want to delete this agent?')) {
       return;
     }
@@ -16,6 +17,7 @@ export function useAgentActions() {
     setError(null);
 
     try {
+      await deleteDeployedAgent(service_id)
       await deleteAgent(id);
       window.location.reload();
     } catch (err) {

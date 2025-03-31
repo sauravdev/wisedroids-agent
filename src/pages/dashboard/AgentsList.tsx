@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { Edit2, Trash2, Play, Download } from 'lucide-react';
 
 interface Agent {

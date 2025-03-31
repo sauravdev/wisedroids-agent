@@ -24,6 +24,7 @@ export interface Database {
           api_endpoint: string | null
           metrics: Json
           code: string | null
+          service_id: string | null
           created_at: string
           updated_at: string
         }
@@ -41,6 +42,7 @@ export interface Database {
           api_endpoint?: string | null
           metrics?: Json
           code?: string | null
+          service_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -58,6 +60,7 @@ export interface Database {
           api_endpoint?: string | null
           metrics?: Json
           code?: string | null
+          service_id?: string | null
           created_at?: string
           updated_at?: string
         }
