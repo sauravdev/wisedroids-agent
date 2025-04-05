@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface StepPersonalityProps {
   traits: Record<string, number>;
@@ -6,8 +6,22 @@ interface StepPersonalityProps {
 }
 
 export function StepPersonality({ traits, setTraits }: StepPersonalityProps) {
+  const [inputValue, setInputValue] = useState('');
+  
+  // Initialize input value when component mounts or traits change
+  useEffect(() => {
+    const traitsText = Object.entries(traits)
+      .map(([trait, value]) => `${trait}: ${value}`)
+      .join('\n');
+    setInputValue(traitsText);
+  }, [traits]);
+
   const handleTraitsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const lines = e.target.value.split('\n').filter(line => line.trim() !== '');
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    
+    // Only update traits when the input is valid
+    const lines = newValue.split('\n').filter(line => line.trim() !== '');
     const newTraits: Record<string, number> = {};
     
     lines.forEach(line => {
@@ -17,12 +31,11 @@ export function StepPersonality({ traits, setTraits }: StepPersonalityProps) {
       }
     });
     
-    setTraits(newTraits);
+    // Only update if we have valid traits
+    if (Object.keys(newTraits).length > 0) {
+      setTraits(newTraits);
+    }
   };
-
-  const traitsText = Object.entries(traits)
-    .map(([trait, value]) => `${trait}: ${value}`)
-    .join('\n');
 
   return (
     <div className="space-y-4">
@@ -38,7 +51,7 @@ export function StepPersonality({ traits, setTraits }: StepPersonalityProps) {
         </label>
         <textarea
           id="personality"
-          value={traitsText}
+          value={inputValue}
           onChange={handleTraitsChange}
           rows={6}
           placeholder="Example:

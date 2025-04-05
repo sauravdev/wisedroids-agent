@@ -105,6 +105,10 @@ export function AgentCreationWizard() {
       component: (
         <StepCodeGeneration
           agentDescription={formData.description}
+          agentCapabilities={formData.capabilities}
+          agentIntegrations={formData.integrations}
+          agentPersonality={formData.personality}
+          agentName={formData.name}
           code={formData.generatedCode}
           onSaveCode={(code) => setFormData({ ...formData, generatedCode: code })}
         />

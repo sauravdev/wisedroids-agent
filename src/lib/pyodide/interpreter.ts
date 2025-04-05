@@ -5,6 +5,13 @@ let isInitializing = false;
 let initializationError: Error | null = null;
 let initializationPromise: Promise<PyodideInterface> | null = null;
 let fallbackMode = false;
+let installationStatus = {
+  isInstalling: false,
+  currentPackage: '',
+  totalPackages: 0,
+  installedPackages: 0,
+  logs: [] as string[]
+};
 
 const INITIALIZATION_TIMEOUT = 30000; // 30 seconds
 const MAX_RETRIES = 3;
@@ -16,6 +23,28 @@ const CDN_URLS = [
   "https://pyodide-cdn2.iodide.io/v0.24.1/full/",
   "https://pyodide.org/v0.24.1/full/"
 ];
+
+// Function to reset Pyodide state
+function resetPyodide() {
+  pyodide = null;
+  isInitializing = false;
+  initializationError = null;
+  initializationPromise = null;
+  fallbackMode = false;
+  retryCount = 0;
+  installationStatus = {
+    isInstalling: false,
+    currentPackage: '',
+    totalPackages: 0,
+    installedPackages: 0,
+    logs: []
+  };
+}
+
+// Function to get installation status
+export function getInstallationStatus() {
+  return { ...installationStatus };
+}
 
 async function testCDN(url: string): Promise<boolean> {
   try {
@@ -83,6 +112,63 @@ export async function initializePyodide(forceRetry = false): Promise<PyodideInte
       // Set up basic Python environment
       await instance.loadPackage(['micropip']);
       
+      // Install crewai and its dependencies
+      installationStatus.isInstalling = true;
+      installationStatus.logs = [];
+      installationStatus.totalPackages = 20; // Update this if you add more packages
+      installationStatus.installedPackages = 0;
+      
+      await instance.runPythonAsync(`
+        import micropip
+        import sys
+        
+        def log_message(message):
+            print(f"[INSTALL_LOG] {message}")
+            sys.stdout.flush()
+        
+        async def install_package(package_name):
+            try:
+                log_message(f"Installing {package_name}...")
+                await micropip.install(package_name)
+                log_message(f"Successfully installed {package_name}")
+            except Exception as e:
+                log_message(f"Failed to install {package_name}: {str(e)}")
+        
+        # Core packages
+        await install_package('crewai')
+        await install_package('langchain')
+        await install_package('openai')
+        
+        # Dependencies
+        await install_package('tiktoken')
+        await install_package('pydantic')
+        await install_package('python-dotenv')
+        await install_package('requests')
+        await install_package('beautifulsoup4')
+        await install_package('selenium')
+        await install_package('playwright')
+        await install_package('duckduckgo-search')
+        await install_package('google-search-results')
+        await install_package('wikipedia')
+        
+        # Data science packages
+        await install_package('pandas')
+        await install_package('numpy')
+        await install_package('matplotlib')
+        await install_package('seaborn')
+        await install_package('scikit-learn')
+        
+        # ML/AI packages
+        await install_package('tensorflow')
+        await install_package('torch')
+        await install_package('transformers')
+        await install_package('sentence-transformers')
+        await install_package('faiss-cpu')
+        await install_package('chromadb')
+        
+        log_message("Package installation completed")
+      `);
+      
       await instance.runPythonAsync(`
         import sys
         import io
@@ -132,6 +218,8 @@ export async function initializePyodide(forceRetry = false): Promise<PyodideInte
       pyodide = instance;
       fallbackMode = false;
       retryCount = 0;
+      installationStatus.isInstalling = false;
+      installationStatus.logs.push("Pyodide initialization completed successfully");
       return instance;
 
     } catch (error) {
@@ -153,6 +241,8 @@ export async function initializePyodide(forceRetry = false): Promise<PyodideInte
 
       initializationError = error instanceof Error ? error : new Error('Unknown initialization error');
       fallbackMode = true;
+      installationStatus.isInstalling = false;
+      installationStatus.logs.push(`Initialization error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       throw initializationError;
     } finally {
       isInitializing = false;
@@ -163,7 +253,6 @@ export async function initializePyodide(forceRetry = false): Promise<PyodideInte
   return initializationPromise;
 }
 
-// Rest of the file remains the same...
 /**
  * Run Python code safely in the Pyodide environment.
  * Returns an object with:
@@ -176,19 +265,63 @@ export async function runPythonCode(code: string) {
     throw new Error("Pyodide is not initialized");
   }
 
-  // Escape any special quotes inside the string
-  const escapedCode = code.replace(/"/g, '\\"');
+  try {
+    // Properly escape the code string for Python
+    const escapedCode = code
+      .replace(/\\/g, '\\\\')  // Escape backslashes first
+      .replace(/"/g, '\\"')    // Escape quotes
+      .replace(/\n/g, '\\n')   // Escape newlines
+      .replace(/\r/g, '\\r')   // Escape carriage returns
+      .replace(/\t/g, '\\t');  // Escape tabs
 
-  // Call the Python function run_code_safely(...) defined in interpreter.py
-  const result = await pyodide.runPythonAsync(`
-    run_code_safely("${escapedCode}")
-  `);
+    // Call the Python function run_code_safely with the escaped code
+    const result = await pyodide.runPythonAsync(`
+      try:
+        result = run_code_safely("""${escapedCode}""")
+        result
+      except Exception as e:
+        import traceback
+        error_msg = f"Python execution error:\\n{str(e)}\\n{traceback.format_exc()}"
+        print(error_msg, file=sys.stderr)
+        {
+          'success': False,
+          'output': {'stdout': '', 'stderr': error_msg},
+          'error': error_msg
+        }
+    `);
 
-  // Example return format:
-  // {
-  //   success: true,
-  //   output: { stdout: "...", stderr: "..." },
-  //   error: null
-  // }
-  return result;
+    console.log("Raw Pyodide result:", result); // Debug log
+
+    if (!result) {
+      throw new Error("No result returned from Python execution");
+    }
+
+    // Ensure the result has the expected structure
+    if (typeof result !== 'object' || result === null) {
+      throw new Error("Invalid result structure from Python execution");
+    }
+
+    // Convert the Python object to a JavaScript object with safe defaults
+    const jsResult = {
+      success: Boolean(result.success),
+      output: {
+        stdout: String(result.output?.stdout || ''),
+        stderr: String(result.output?.stderr || '')
+      },
+      error: result.error ? String(result.error) : null
+    };
+
+    return jsResult;
+  } catch (error) {
+    console.error("Pyodide execution error:", error);
+    // Return a properly structured error result
+    return {
+      success: false,
+      output: {
+        stdout: '',
+        stderr: error instanceof Error ? error.message : 'Unknown error'
+      },
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }

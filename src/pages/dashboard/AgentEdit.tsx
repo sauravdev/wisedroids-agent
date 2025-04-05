@@ -88,6 +88,11 @@ export function AgentEdit() {
 
           <StepCodeGeneration
             agentDescription={formData.description}
+            agentCapabilities={formData.capabilities}
+            agentPersonality={formData.personality}
+            agentIntegrations={formData.integrations}
+            agentName={formData.name}
+            code={formData.code}
             onSaveCode={(code) => setFormData({ ...formData, code })}
           />
 

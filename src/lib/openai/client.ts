@@ -1,13 +1,17 @@
 import axios from 'axios';
-const url = import.meta.env.VITE_OPENAI_URL
+const url = import.meta.env.VITE_API || `http://localhost:5002/api/v1`;
 
-export async function generateAgentCode(description: string) {
+export async function generateAgentCode(description: string,capabilities: string[],integrations: string[],personality: Record<string, number>,name: string): Promise<string> {
   try {
     const payload = {
       "type" : "generateAgentCode",
-      description : description
+      description : description,
+      capabilities : capabilities,
+      integrations : integrations,
+      personality : personality,
+      name : name
     }
-    const response = await axios.post(url,payload);
+    const response = await axios.post(`${url}/openai/wisedroid-agent`,payload);
     return response.data.data
   } catch (error) {
     console.error('Error generating code:', error);
@@ -28,7 +32,7 @@ export async function enhanceCode(code: string, error: string): Promise<string> 
       code : code,
       error : error
     }
-    const response = await axios.post(url,payload);
+    const response = await axios.post(`${url}/openai/wisedroid-agent`,payload);
     return response.data.data
   } catch (error) {
     console.error('Error enhancing code:', error);

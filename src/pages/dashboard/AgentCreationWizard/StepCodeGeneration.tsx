@@ -2,15 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, Wand2, Play } from 'lucide-react';
 import { generateAgentCode, enhanceCode } from '@/lib/openai/client';
 import { executeCode } from '@/lib/code/executor';
-import { initializePyodide } from '@/lib/pyodide/interpreter';
+import { initializePyodide, getInstallationStatus } from '@/lib/pyodide/interpreter';
 
 interface StepCodeGenerationProps {
   agentDescription: string;
+  agentCapabilities: string[];
+  agentPersonality: Record<string, number>;
+  agentIntegrations: string[];
+  agentName: string;
   code: string;
   onSaveCode: (code: string) => void;
 }
 
-export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCodeGenerationProps) {
+export function StepCodeGeneration({ agentDescription,agentCapabilities,agentIntegrations,agentPersonality,agentName,code, onSaveCode }: StepCodeGenerationProps) {
   const [generatedCode, setGeneratedCode] = useState(code);
   const [output, setOutput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -19,6 +23,7 @@ export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCo
   const [error, setError] = useState<string | null>(null);
   const [enhancementPrompt, setEnhancementPrompt] = useState('');
   const [isPyodideReady, setIsPyodideReady] = useState(false);
+  const [installationStatus, setInstallationStatus] = useState(getInstallationStatus());
 
   // Initialize Pyodide when component mounts
   useEffect(() => {
@@ -26,14 +31,31 @@ export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCo
       try {
         await initializePyodide();
         setIsPyodideReady(true);
+        console.log('Pyodide initialized successfully');
       } catch (err) {
         console.error('Failed to initialize Pyodide:', err);
-        setError('Python execution environment initialization failed. Using fallback mode.');
+        setError('Python execution environment initialization failed. Please refresh the page to try again.');
+        setIsPyodideReady(false);
       }
     };
 
     initPyodide();
   }, []);
+
+  // Update installation status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const status = getInstallationStatus();
+      setInstallationStatus(status);
+      
+      // If installation is complete, update Pyodide ready state
+      if (!status.isInstalling && isPyodideReady === false) {
+        setIsPyodideReady(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPyodideReady]);
 
   const handleGenerateCode = async () => {
     if (!agentDescription.trim()) {
@@ -46,7 +68,7 @@ export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCo
     setOutput('');
 
     try {
-      const code = await generateAgentCode(agentDescription);
+      const code = await generateAgentCode(agentDescription,agentCapabilities,agentIntegrations,agentPersonality,agentName);
       setGeneratedCode(code);
       onSaveCode(code);
     } catch (err) {
@@ -68,7 +90,10 @@ export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCo
 
     try {
       const result = await executeCode(generatedCode);
-      setOutput(result);
+      if(result.error) {
+        setError(result.error);
+      }
+      setOutput(result.output.stdout || result.output.stderr || 'No output');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to execute code');
     } finally {
@@ -122,14 +147,19 @@ export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCo
             </button>
             <button
               onClick={handleExecuteCode}
-              disabled={isExecuting || !generatedCode || !isPyodideReady}
+              disabled={isExecuting || !generatedCode || !isPyodideReady || installationStatus.isInstalling}
               className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-              title={!isPyodideReady ? 'Python environment is initializing...' : undefined}
+              title={!isPyodideReady ? 'Python environment is initializing...' : installationStatus.isInstalling ? 'Packages are being installed...' : undefined}
             >
               {isExecuting ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                   Executing...
+                </>
+              ) : installationStatus.isInstalling ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Installing Packages...
                 </>
               ) : (
                 <>
@@ -140,6 +170,29 @@ export function StepCodeGeneration({ agentDescription,code, onSaveCode }: StepCo
             </button>
           </div>
         </div>
+
+        {installationStatus.isInstalling && (
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <h4 className="text-sm font-medium text-blue-800 mb-2">Installing Python Packages</h4>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-blue-700">
+                <span>Progress: {installationStatus.installedPackages} / {installationStatus.totalPackages} packages</span>
+                <span>{Math.round((installationStatus.installedPackages / installationStatus.totalPackages) * 100)}%</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2.5">
+                <div 
+                  className="bg-blue-600 h-2.5 rounded-full" 
+                  style={{ width: `${(installationStatus.installedPackages / installationStatus.totalPackages) * 100}%` }}
+                ></div>
+              </div>
+              <div className="max-h-40 overflow-y-auto bg-blue-100 p-2 rounded text-xs font-mono">
+                {installationStatus.logs.map((log, index) => (
+                  <div key={index} className="text-blue-800">{log}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="relative">
           <textarea
