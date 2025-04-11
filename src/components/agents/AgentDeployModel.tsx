@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import axios from 'axios';
 
 interface AgentDeployModalProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface AgentDeployModalProps {
   agent: {
     id: string;
     name: string;
+    code:string;
   };
   isLoading: boolean;
 }
@@ -15,38 +17,119 @@ interface AgentDeployModalProps {
 export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }: AgentDeployModalProps) {
   const [name, setName] = useState(agent.name);
   const [repoUrl, setRepoUrl] = useState('');
+  const [repoList, setRepoList] = useState([]);
+  const [buildCommand, setBuildCommand] = useState('pip install -r requirements.txt');
+  const [startCommand, setStartCommand] = useState('uvicorn app.main:app --reload --host 0.0.0.0 --port 8080');
+  const [branch, setBranch] = useState('main');
   const [errors, setErrors] = useState<{
     name?: string;
     repoUrl?: string;
+    branch?: string;
+    buildCommand?: string;
+    startCommand?: string;
   }>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate inputs
     const newErrors: {
       name?: string;
       repoUrl?: string;
+      branch?: string;
+      buildCommand?: string;
+      startCommand?: string;
     } = {};
     
     if (!name.trim()) {
       newErrors.name = 'Name is required';
     }
     
-    if (!repoUrl.trim()) {
+    if (!`https://github.com/${repoUrl}`.trim()) {
       newErrors.repoUrl = 'GitHub repo URL is required';
-    } else if (!/^https:\/\/github\.com\/[\w-]+\/[\w-]+/.test(repoUrl)) {
+    } else if (!/^https:\/\/github\.com\/[\w-]+\/[\w-]+/.test(`https://github.com/${repoUrl}`)) {
       newErrors.repoUrl = 'Please enter a valid GitHub repository URL';
     }
-    
+    if (!branch.trim()) {
+      newErrors.branch = 'Branch is required';
+    }
+    if (!startCommand.trim()) {
+      newErrors.startCommand = 'Start Command is required';
+    }
+    if (!buildCommand.trim()) {
+      newErrors.buildCommand = 'Build Command is required';
+    }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
     
     // If validation passes, call onDeploy
-    onDeploy(agent.id, name, repoUrl);
+    await createFile();
+    // onDeploy(agent.id, name, `https://github.com/${repoUrl}`);
   };
+  const forkRepo = async () => { 
+    try {
+      const options = { 
+        headers: {
+          Authorization: `token ${localStorage.getItem('githubToken')}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }
+      const response = await axios.post(`https://api.github.com/repos/sauravdev/wisedroids-ai-agents/forks`, {}, options);
+      if (!response.data) {
+        throw new Error('Failed to create file');
+      }
+      const data = await response.data;
+      console.log('Repo forked successfully:', data);
+    } catch (error) {
+      
+      console.error('Error fork repo:', error);
+    }
+  }
+  const createFile = async () => {
+      try {
+        const options = {
+          headers: {
+            Authorization: `token ${localStorage.getItem('githubToken')}`,
+            Accept: 'application/vnd.github.v3+json',
+          },
+        };
+        const base64Content = btoa(agent.code);
+        const payload = {
+          "message": "wisedroid created a file main.py",
+          "content": base64Content,
+          "branch": "main"
+        }
+        const response = await axios.put(`https://api.github.com/repos/${repoUrl}/contents/main.py`,payload, options);
+        if(!response.data) {
+          throw new Error('Failed to create file');
+        }
+        const data = await response.data;
+        console.log('File created successfully:', data);
+      } catch (error) {
+        console.error('Error creating file:', error);
+      }
+  }
+
+  const fetchUsersRepo = async () => { 
+    const options = { 
+      headers: {
+        Authorization: `token ${localStorage.getItem('githubToken')}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    }
+    const response = await axios.get(`https://api.github.com/user/repos`,options);
+    if (!response.data) {
+      throw new Error('Failed to fetch repository');
+    }
+    const data = await response.data;
+    setRepoList(data)
+    await forkRepo();
+  }
+  useEffect(() => {
+    fetchUsersRepo()
+  },[])
 
   if (!isOpen) return null;
 
@@ -81,7 +164,25 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
             </div>
-            
+            <div>
+              <label htmlFor="repoUrl" className="block text-sm font-medium text-gray-700">
+                Select Repository
+              </label>
+              <select
+                id="repoUrl"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                className={`mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                disabled={isLoading}
+              >
+                <option value="">Select a repository</option>
+                {repoList.map((repo: { id: string; name: string; full_name: string }) => (
+                  <option key={repo.id} value={repo.full_name}>
+                    {repo.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label htmlFor="repoUrl" className="block text-sm font-medium text-gray-700">
                 GitHub Repository URL
@@ -89,7 +190,7 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
               <input
                 type="text"
                 id="repoUrl"
-                value={repoUrl}
+                value={repoUrl ? `https://github.com/${repoUrl}` : ''}
                 onChange={(e) => setRepoUrl(e.target.value)}
                 placeholder="https://github.com/username/repo"
                 className={`mt-1 block w-full px-3 py-2 border ${
@@ -99,8 +200,59 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
               />
               {errors.repoUrl && <p className="text-red-500 text-xs mt-1">{errors.repoUrl}</p>}
             </div>
+            <div>
+              <label htmlFor="repoUrl" className="block text-sm font-medium text-gray-700">
+                GitHub Branch Name
+              </label>
+              <input
+                type="text"
+                id="branch"
+                value={branch}
+                onChange={(e) => setBranch(e.target.value)}
+                placeholder="main"
+                className={`mt-1 block w-full px-3 py-2 border ${
+                  errors.branch ? 'border-red-500' : 'border-gray-300'
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                disabled={isLoading}
+              />
+              {errors.branch && <p className="text-red-500 text-xs mt-1">{errors.branch}</p>}
+            </div>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Build Command
+              </label>
+              <input
+                type="text"
+                id="buildCommand"
+                value={buildCommand}
+                onChange={(e) => setBuildCommand(e.target.value)}
+                placeholder='pip install -r requirements.txt'
+                className={`mt-1 block w-full px-3 py-2 border ${
+                  errors.buildCommand ? 'border-red-500' : 'border-gray-300'
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                disabled={isLoading}
+              />
+              {errors.buildCommand && <p className="text-red-500 text-xs mt-1">{errors.buildCommand}</p>}
+            </div>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Start Command
+              </label>
+              <input
+                type="text"
+                id="startCommand"
+                value={startCommand}
+                placeholder='uvicorn app.main:app --reload --host 0.0.0.0 --port 8080'
+                onChange={(e) => setStartCommand(e.target.value)}
+                className={`mt-1 block w-full px-3 py-2 border ${
+                  errors.startCommand ? 'border-red-500' : 'border-gray-300'
+                } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
+                disabled={isLoading}
+              />
+              {errors.startCommand && <p className="text-red-500 text-xs mt-1">{errors.startCommand}</p>}
+            </div>
           </div>
-          
+
           <div className="mt-6 flex justify-end">
             <button
               type="button"

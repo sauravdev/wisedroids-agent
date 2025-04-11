@@ -19,8 +19,10 @@ export function AgentsList() {
   const loginWithGitHub = () => {
     const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
     const redirectURI = 'http://localhost:5173/dashboard';
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}`;
-  };
+    const scope = 'repo'; // Grants write access to repositories
+    
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=${scope}`;
+};
 
   const updateAgentStatus = async (id:string,service_id:string,api_endpoint:string) => {
     try {
