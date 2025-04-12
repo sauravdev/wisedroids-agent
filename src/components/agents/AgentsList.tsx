@@ -9,6 +9,7 @@ import { useAgentLimit } from '@/hooks/useAgentLimit';
 import axios from 'axios';
 import { deployAgent } from '@/lib/render/deploy';
 import { supabase } from '@/lib/supabase/client';
+import { convertCodeToWebAPP } from '@/lib/openai/client';
 
 export function AgentsList() {
   const { agents, loading, error } = useAgents();
@@ -47,13 +48,16 @@ export function AgentsList() {
       return { success: false, error };
     }
   }
-  const handleDeploy = async (agent_id : string,name:string,repoURL:string) => {
+  const handleDeploy = async (agent_id : string,name:string,repoURL:string,repoName:string,code:string,buildCommand:string,startCommand:string) => {
     setLoading(true)
     try {
       const payload = {
         name : name,
         repo : repoURL,
+        buildCommand : buildCommand,
+        startCommand : startCommand,
       }
+      await createFile(repoName,code);
       const response = await deployAgent(payload);
       if(response.data.success) {
         updateAgentStatus(agent_id,response?.data?.data?.service?.id,response?.data?.data?.service?.serviceDetails?.url)
@@ -63,6 +67,50 @@ export function AgentsList() {
       console.log(error)
     }
   }
+  const forkRepo = async (token:string) => { 
+    try {
+      const options = { 
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }
+      const response = await axios.post(`https://api.github.com/repos/sauravdev/wisedroids-ai-agents/forks`, {}, options);
+      if (!response.data) {
+        throw new Error('Failed to create file');
+      }
+      const data = await response.data;
+      console.log('Repo forked successfully:', data);
+    } catch (error) {
+      
+      console.error('Error fork repo:', error);
+    }
+  }
+  const createFile = async (repoUrl:string,code:string) => {
+    try {
+      const options = {
+        headers: {
+          Authorization: `token ${localStorage.getItem('githubToken')}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      };
+      const ehanceCode = await convertCodeToWebAPP(code);
+      const base64Content = btoa(ehanceCode);
+      const payload = {
+        "message": "wisedroid created a file main.py",
+        "content": base64Content,
+        "branch": "main"
+      }
+      const response = await axios.put(`https://api.github.com/repos/${repoUrl}/contents/main.py`,payload, options);
+      if(!response.data) {
+        throw new Error('Failed to create file');
+      }
+      const data = await response.data;
+      console.log('File created successfully:', data);
+    } catch (error) {
+      console.error('Error creating file:', error);
+    }
+}
 const checkGithubConnection = async () => {
   try {
 
@@ -74,6 +122,7 @@ const checkGithubConnection = async () => {
         const url = import.meta.env.VITE_API || 'http://localhost:5002/api/v1';
         const response = await axios.post(`${url}/candidate/github-login`, { code });
         if (response.data.success) {
+            await forkRepo(response.data.data);
             setIsConnected(true);
             localStorage.setItem('githubToken', response.data.data);
         } else {
@@ -172,7 +221,7 @@ useEffect(() => {
               onDelete={handleDelete}
               onEdit={handleEdit}
               onAnalytics={handleAnalytics}
-              onDeploy={(id,name,repoURL)=>handleDeploy(id,name,repoURL)}
+              onDeploy={(id,name,repoURL,repoName,code,buildCommand,startCommand)=>handleDeploy(id,name,repoURL,repoName,code,buildCommand,startCommand)}
               isLoading={isLoading}
             />
           ))}

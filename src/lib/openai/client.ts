@@ -39,3 +39,16 @@ export async function enhanceCode(code: string, error: string): Promise<string> 
     throw new Error('Failed to enhance code. Please try again.');
   }
 }
+export async function convertCodeToWebAPP(code: string): Promise<string> {
+  try {
+    const payload = {
+      "type" : "convertToWebApp",
+      code : code,
+    }
+    const response = await axios.post(`${url}/openai/wisedroid-agent`,payload);
+    return response.data.data
+  } catch (error) {
+    console.error('Error enhancing code:', error);
+    throw new Error('Failed to enhance code. Please try again.');
+  }
+}

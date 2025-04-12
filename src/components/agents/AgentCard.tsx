@@ -7,7 +7,7 @@ import { AgentDeployModal } from './AgentDeployModel';
 interface AgentCardProps {
   agent: Agent;
   onDelete: (id: string,service_id:string | null) => void;
-  onDeploy: (id: string, name: string, repoUrl: string) => void;
+  onDeploy: (id: string, name: string, repoUrl: string,repoName:string,code:string,buildCommand:string,startCommand:string) => void;
   onEdit: (id: string) => void;
   onAnalytics: (id: string) => void;
   readOnly?: boolean;
@@ -22,8 +22,8 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
     setIsDeployModalOpen(true);
   };
 
-  const handleDeploySubmit = (agentId: string, name: string, repoUrl: string) => {
-    onDeploy(agentId, name, repoUrl);
+  const handleDeploySubmit = (agentId: string, name: string, repoUrl: string,repoName:string,code:string,buildCommand:string,startCommand:string) => {
+    onDeploy(agentId, name, repoUrl,repoName,code,buildCommand,startCommand);
     setIsDeployModalOpen(false);
   };
 
@@ -92,13 +92,14 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
               {isLoading ? 'Deploying...' : 'Deploy'}
             </button>
           ) : (
-            <Link
-              to={`/dashboard/agents/${agent.id}/test`}
+            <a
+              href={agent.api_endpoint}
+              target='_blank'
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
             >
               <Play className="h-4 w-4" />
               Test Agent
-            </Link>
+            </a>
           )}
         </div>
       )}

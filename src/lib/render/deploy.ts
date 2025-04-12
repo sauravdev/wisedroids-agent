@@ -1,11 +1,13 @@
 import axios from "axios";
 
-export async function deployAgent({name,repo} : {name: string, repo: string}) {
+export async function deployAgent({name,repo,buildCommand,startCommand} : {name: string, repo: string,buildCommand:string,startCommand:string}) {
     const url = import.meta.env.VITE_API || 'http://localhost:5002/api/v1';
     try {
       const payload = {
         name : name,
-        repo : repo
+        repo : repo,
+        buildCommand : buildCommand,
+        startCommand : startCommand,
       }
       const response = await axios.post(`${url}/candidate/deploy-agent`,payload);
       return response

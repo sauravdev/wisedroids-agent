@@ -5,7 +5,7 @@ import axios from 'axios';
 interface AgentDeployModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onDeploy: (agentId: string, name: string, repoUrl: string) => void;
+  onDeploy: (agentId: string, name: string, repoUrl: string,repoName:string,code:string,buildCommand:string,startCommand:string) => void;
   agent: {
     id: string;
     name: string;
@@ -19,7 +19,7 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
   const [repoUrl, setRepoUrl] = useState('');
   const [repoList, setRepoList] = useState([]);
   const [buildCommand, setBuildCommand] = useState('pip install -r requirements.txt');
-  const [startCommand, setStartCommand] = useState('uvicorn app.main:app --reload --host 0.0.0.0 --port 8080');
+  const [startCommand, setStartCommand] = useState('streamlit run main.py');
   const [branch, setBranch] = useState('main');
   const [errors, setErrors] = useState<{
     name?: string;
@@ -65,52 +65,11 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
     }
     
     // If validation passes, call onDeploy
-    await createFile();
-    // onDeploy(agent.id, name, `https://github.com/${repoUrl}`);
+    // await createFile();
+    onDeploy(agent.id, name, `https://github.com/${repoUrl}`,repoUrl,agent.code,buildCommand,startCommand);
   };
-  const forkRepo = async () => { 
-    try {
-      const options = { 
-        headers: {
-          Authorization: `token ${localStorage.getItem('githubToken')}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      }
-      const response = await axios.post(`https://api.github.com/repos/sauravdev/wisedroids-ai-agents/forks`, {}, options);
-      if (!response.data) {
-        throw new Error('Failed to create file');
-      }
-      const data = await response.data;
-      console.log('Repo forked successfully:', data);
-    } catch (error) {
-      
-      console.error('Error fork repo:', error);
-    }
-  }
-  const createFile = async () => {
-      try {
-        const options = {
-          headers: {
-            Authorization: `token ${localStorage.getItem('githubToken')}`,
-            Accept: 'application/vnd.github.v3+json',
-          },
-        };
-        const base64Content = btoa(agent.code);
-        const payload = {
-          "message": "wisedroid created a file main.py",
-          "content": base64Content,
-          "branch": "main"
-        }
-        const response = await axios.put(`https://api.github.com/repos/${repoUrl}/contents/main.py`,payload, options);
-        if(!response.data) {
-          throw new Error('Failed to create file');
-        }
-        const data = await response.data;
-        console.log('File created successfully:', data);
-      } catch (error) {
-        console.error('Error creating file:', error);
-      }
-  }
+ 
+
 
   const fetchUsersRepo = async () => { 
     const options = { 
@@ -125,7 +84,6 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
     }
     const data = await response.data;
     setRepoList(data)
-    await forkRepo();
   }
   useEffect(() => {
     fetchUsersRepo()
