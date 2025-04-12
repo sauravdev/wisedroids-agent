@@ -19,7 +19,7 @@ export function AgentsList() {
   const [isLoading,setLoading] = useState(false);
   const loginWithGitHub = () => {
     const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const redirectURI = 'http://localhost:5173/dashboard';
+    const redirectURI = 'https://www.wisedroids.ai/dashboard';
     const scope = 'repo'; // Grants write access to repositories
     
     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=${scope}`;
