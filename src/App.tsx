@@ -5,7 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Home } from './pages/Home';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
-import { Careers } from './pages/Careers';
+// import { Careers } from './pages/Careers';
 import { AgentHub } from './pages/AgentHub';
 import { Login } from './pages/auth/Login';
 import { SignUp } from './pages/auth/SignUp';
@@ -49,7 +49,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/careers" element={<Careers />} />
+            {/* <Route path="/careers" element={<Careers />} /> */}
             <Route path="/agent-hub" element={<AgentHub />} />
             <Route path="/features" element={<Features />} />
             <Route path="/how-it-works" element={<HowItWorks />} />

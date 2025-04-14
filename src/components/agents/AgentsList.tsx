@@ -101,6 +101,11 @@ export function AgentsList() {
         "content": base64Content,
         "branch": "main"
       }
+      const checkExistingFile = await axios.get(`https://api.github.com/repos/${repoUrl}/contents/main.py`, options);
+      if(checkExistingFile.status === 200) {
+        console.log('File already exists, updating...');
+        payload.sha = checkExistingFile.data.sha;
+      }
       const response = await axios.put(`https://api.github.com/repos/${repoUrl}/contents/main.py`,payload, options);
       if(!response.data) {
         throw new Error('Failed to create file');
