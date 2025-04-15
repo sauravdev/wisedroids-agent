@@ -135,9 +135,19 @@ export function AgentCreationWizard() {
         metrics: { requests: 0, success_rate: 0, avg_response_time: 0 },
         code: formData.generatedCode
       };
+      const updateAgentData = {
+        user_id: user.id,
+        name: formData.name,
+        description: formData.description,
+        capabilities: formData.capabilities,
+        personality: formData.personality,
+        integrations: formData.integrations,
+        is_public: formData.isPublic,
+        code: formData.generatedCode
+      };
 
       if (id) {
-        await updateAgent(id, agentData);
+        await updateAgent(id, updateAgentData);
       } else {
         await createAgent(agentData);
       }

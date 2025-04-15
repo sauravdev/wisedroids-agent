@@ -8,7 +8,7 @@ export function AgentAnalytics() {
   const { id } = useParams<{ id: string }>();
   const { agent, loading, error } = useAgent(id!);
   const [stats, setStats] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Process data for charts
   const processSuccessRateData = (data) => {

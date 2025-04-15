@@ -15,6 +15,11 @@ import { Features } from './pages/Features';
 import { HowItWorks } from './pages/HowItWorks';
 import { UseCases } from './pages/UseCases';
 import { useAuth } from './hooks/useAuth';
+import { Pricing } from './components/Pricing';
+import { PrivacyPolicy } from './pages/Privacy';
+import { TermsOfService } from './pages/Terms';
+import { CookiePolicy } from './pages/Cookeis';
+import { BlogPage } from './pages/Blog';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -54,6 +59,11 @@ export default function App() {
             <Route path="/features" element={<Features />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/use-cases" element={<UseCases />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="/blog" element={<BlogPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route 
               path="/login" 

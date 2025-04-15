@@ -7,7 +7,7 @@ import { useAgents } from '@/hooks/useAgents';
 import { useAgentActions } from '@/hooks/useAgentActions';
 import { useAgentLimit } from '@/hooks/useAgentLimit';
 import axios from 'axios';
-import { deployAgent } from '@/lib/render/deploy';
+import { deployAgent, redeployAgent } from '@/lib/render/deploy';
 import { supabase } from '@/lib/supabase/client';
 import { convertCodeToWebAPP } from '@/lib/openai/client';
 
@@ -48,6 +48,27 @@ export function AgentsList() {
       return { success: false, error };
     }
   }
+  const updateReDeployAgentStatus = async (id:string) => {
+    try {
+      const { data, error } = await supabase
+        .from('agents')
+        .update({
+          status: 'deployed',  // Update status from 'draft' to 'deploy'
+        })
+        .eq('id', id);      // Filter by id
+      
+      if (error) {
+        console.error('Error updating agent status:', error);
+        return { success: false, error };
+      }
+      setLoading(false)
+      window.location.reload();
+      return { success: true, data };
+    } catch (error) {
+      console.error('Exception updating agent status:', error);
+      return { success: false, error };
+    }
+  }
   const handleDeploy = async (agent_id : string,name:string,repoURL:string,repoName:string,code:string,buildCommand:string,startCommand:string) => {
     setLoading(true)
     try {
@@ -58,6 +79,13 @@ export function AgentsList() {
         startCommand : startCommand,
       }
       await createFile(repoName,code);
+      const existingAgent = agents.find((agent) => agent.id === agent_id);
+      if (existingAgent?.service_id) { 
+        const response = await redeployAgent({service_id: existingAgent?.service_id});
+        if(response.data.success) {
+          updateReDeployAgentStatus(agent_id);
+        }
+      }
       const response = await deployAgent(payload);
       if(response.data.success) {
         updateAgentStatus(agent_id,response?.data?.data?.service?.id,response?.data?.data?.service?.serviceDetails?.url)
@@ -103,7 +131,6 @@ export function AgentsList() {
       }
       const checkExistingFile = await axios.get(`https://api.github.com/repos/${repoUrl}/contents/main.py`, options);
       if(checkExistingFile.status === 200) {
-        console.log('File already exists, updating...');
         payload.sha = checkExistingFile.data.sha;
       }
       const response = await axios.put(`https://api.github.com/repos/${repoUrl}/contents/main.py`,payload, options);
@@ -111,7 +138,7 @@ export function AgentsList() {
         throw new Error('Failed to create file');
       }
       const data = await response.data;
-      console.log('File created successfully:', data);
+      console.log('File created successfully');
     } catch (error) {
       console.error('Error creating file:', error);
     }

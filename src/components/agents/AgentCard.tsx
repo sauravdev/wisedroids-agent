@@ -92,14 +92,24 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
               {isLoading ? 'Deploying...' : 'Deploy'}
             </button>
           ) : (
+            <div>
+            <button
+              onClick={handleDeployClick}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
+              {isLoading ? 'Deploying...' : 'Re Deploy'}
+            </button>
             <a
               href={agent.api_endpoint}
               target='_blank'
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 mt-2"
             >
               <Play className="h-4 w-4" />
               Test Agent
             </a>
+            </div>
           )}
         </div>
       )}

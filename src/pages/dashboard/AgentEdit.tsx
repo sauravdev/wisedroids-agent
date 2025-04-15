@@ -45,6 +45,7 @@ export function AgentEdit() {
         integrations: formData.integrations,
         is_public: formData.isPublic,
         code: formData.code,
+        api_endpoint: agent.api_endpoint,
       });
       navigate('/dashboard');
     } catch (error) {
