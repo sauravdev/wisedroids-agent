@@ -17,8 +17,8 @@ export function useAgentActions() {
     setError(null);
 
     try {
-      await deleteDeployedAgent(service_id)
       await deleteAgent(id);
+      await deleteDeployedAgent(service_id)
       window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete agent');

@@ -25,6 +25,7 @@ export function useAuth() {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    localStorage.clear();
   };
 
   return {

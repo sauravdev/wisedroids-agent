@@ -14,7 +14,7 @@ import { convertCodeToWebAPP } from '@/lib/openai/client';
 export function AgentsList() {
   const { agents, loading, error } = useAgents();
   const { handleDelete, handleEdit, handleAnalytics } = useAgentActions();
-  const { hasReachedLimit, remainingAgents } = useAgentLimit();
+  const { hasReachedLimit, remainingAgents,isChecking } = useAgentLimit();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading,setLoading] = useState(false);
   const loginWithGitHub = () => {
@@ -178,7 +178,7 @@ useEffect(() => {
   }
  
 }, []);
-  if (loading) {
+  if (loading || isChecking) {
     return <div className="text-center py-8">Loading agents...</div>;
   }
 

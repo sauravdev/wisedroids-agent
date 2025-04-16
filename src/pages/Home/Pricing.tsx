@@ -1,4 +1,3 @@
-import React from 'react';
 import { PricingCard } from '@/components/PricingCard';
 
 const plans = [
@@ -10,7 +9,8 @@ const plans = [
       "Up to 10 agents",
       "Basic integrations",
       "Community support"
-    ]
+    ],
+    href : "https://buy.stripe.com/test_fZe289bpHgl3cSIaEH",
   },
   {
     name: "Professional",
@@ -21,7 +21,8 @@ const plans = [
       "Advanced integrations",
       "Priority support",
       "Custom agent training"
-    ]
+    ],
+    href : "https://buy.stripe.com/test_dR6145bpHfgZ6ukdQU",
   },
   {
     name: "Enterprise",
@@ -36,6 +37,7 @@ const plans = [
 ];
 
 export function Pricing() {
+
   return (
     <div className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">

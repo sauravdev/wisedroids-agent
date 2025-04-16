@@ -15,7 +15,7 @@ import { Features } from './pages/Features';
 import { HowItWorks } from './pages/HowItWorks';
 import { UseCases } from './pages/UseCases';
 import { useAuth } from './hooks/useAuth';
-import { Pricing } from './components/Pricing';
+import { Pricing } from './pages/Pricing';
 import { PrivacyPolicy } from './pages/Privacy';
 import { TermsOfService } from './pages/Terms';
 import { CookiePolicy } from './pages/Cookeis';
