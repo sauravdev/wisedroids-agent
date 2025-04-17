@@ -20,6 +20,7 @@ import { PrivacyPolicy } from './pages/Privacy';
 import { TermsOfService } from './pages/Terms';
 import { CookiePolicy } from './pages/Cookeis';
 import { BlogPage } from './pages/Blog';
+import { Documentation } from './pages/Docs';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />
             <Route path="/blog" element={<BlogPage />} />
+            <Route path="/docs" element={<Documentation />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route 
               path="/login" 
