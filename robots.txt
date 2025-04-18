@@ -1,0 +1,42 @@
+User-agent: *
+Allow: /
+
+# Public pages - allow crawling
+Allow: /$
+Allow: /about$
+Allow: /contact$
+Allow: /agent-hub$
+Allow: /features$
+Allow: /how-it-works$
+Allow: /use-cases$
+Allow: /pricing$
+Allow: /privacy$
+Allow: /terms$
+Allow: /cookies$
+Allow: /blog$
+Allow: /docs$
+
+# Block authentication and user areas
+Disallow: /login$
+Disallow: /signup$
+Disallow: /auth/
+Disallow: /dashboard/
+Disallow: /admin/
+
+# Block potential development areas
+Disallow: /dev/
+Disallow: /staging/
+Disallow: /test/
+
+# Allow essential assets
+Allow: /*.js$
+Allow: /*.css$
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.gif$
+Allow: /*.svg$
+Allow: /*.webp$
+
+# Reference to sitemap
+Sitemap: https://www.wisedroids.com/sitemap.xml
