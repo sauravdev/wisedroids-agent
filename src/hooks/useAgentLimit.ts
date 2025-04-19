@@ -66,15 +66,16 @@ export function useAgentLimit() {
   } else if (subscription_type === "WiseDroids Professional") {
     FREE_TIER_LIMIT = 50;
   }
-
-  const hasReachedLimit = agents.length >= FREE_TIER_LIMIT;
-  const remainingAgents = Math.max(0, FREE_TIER_LIMIT - agents.length);
+  const privateAgents = agents.filter((el)=>!el.is_public);
+  const hasReachedLimit = privateAgents.length >= FREE_TIER_LIMIT;
+  const remainingAgents = Math.max(0, FREE_TIER_LIMIT - privateAgents.length);
 
   return {
     hasReachedLimit,
     remainingAgents,
-    totalAgents: agents.length,
+    totalAgents: privateAgents.length,
     limit: FREE_TIER_LIMIT,
-    isChecking : isLoading
+    isChecking : isLoading,
+    subscriptionType : subscription_type
   };
 }

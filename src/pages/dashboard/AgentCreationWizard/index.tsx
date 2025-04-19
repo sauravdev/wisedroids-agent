@@ -9,7 +9,7 @@ import { StepCapabilities } from './StepCapabilities';
 import { StepPersonality } from './StepPersonality';
 import { StepIntegrations } from './StepIntegrations';
 import { StepCodeGeneration } from './StepCodeGeneration';
-
+import axios from 'axios';
 interface FormData {
   name: string;
   description: string;
@@ -121,6 +121,7 @@ export function AgentCreationWizard() {
     setLoading(true);
 
     try {
+      const repo = await createNewRepo(formData.name);
       const agentData = {
         user_id: user.id,
         name: formData.name,
@@ -132,6 +133,7 @@ export function AgentCreationWizard() {
         status: 'draft',
         api_key: null,
         api_endpoint: null,
+        repo_url : repo.url,
         metrics: { requests: 0, success_rate: 0, avg_response_time: 0 },
         code: formData.generatedCode
       };
@@ -159,6 +161,25 @@ export function AgentCreationWizard() {
       setLoading(false);
     }
   };
+  const createNewRepo = async (repoName: string,) => {
+    try {
+      const options = {
+        headers: {
+          Authorization: `token ${localStorage.getItem('githubToken')}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      };
+      const response = await axios.post('https://api.github.com/repos/sauravdev/wisedroids-ai-agents/generate',
+        {"name":`wisedroids_${repoName}`,"description":"This repository was created by Wisedroids","include_all_branches":false,"private":false},
+        options
+      )
+      const data = await response.data;
+      return data;
+    } catch (error) {
+      console.error('Error creating new repository:', error);
+      
+    }
+  }
 
   if (loadingAgent) {
     return <div>Loading...</div>;

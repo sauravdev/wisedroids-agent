@@ -6,7 +6,7 @@ import { AgentDeployModal } from './AgentDeployModel';
 
 interface AgentCardProps {
   agent: Agent;
-  onDelete: (id: string,service_id:string | null) => void;
+  onDelete: (id: string,service_id:string | null,repoUrl:string) => void;
   onDeploy: (id: string, name: string, repoUrl: string,repoName:string,code:string,buildCommand:string,startCommand:string) => void;
   onEdit: (id: string) => void;
   onAnalytics: (id: string) => void;
@@ -74,7 +74,7 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
               <BarChart2 className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onDelete(agent.id,agent.service_id)}
+              onClick={() => onDelete(agent.id,agent.service_id,agent.repo_url)}
               className="p-2 text-red-400 hover:text-red-600"
               title="Delete Agent"
             >

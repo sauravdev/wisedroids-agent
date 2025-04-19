@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { createAgent } from '@/lib/supabase/agents';
 import type { Agent } from '@/lib/supabase/agents';
+import axios from 'axios';
 
 interface FormData {
   name: string;
@@ -63,6 +64,8 @@ export function CreateAgentForm() {
         setProgress(prev => Math.min(prev + 10, 90));
       }, 500);
 
+      const repo = await createNewRepo(formData.name);
+
       const agentData: Omit<Agent, 'id' | 'created_at' | 'updated_at'> = {
         user_id: user!.id,
         name: formData.name,
@@ -74,9 +77,9 @@ export function CreateAgentForm() {
         status: 'draft',
         api_key: null,
         api_endpoint: null,
+        repo_url: repo.html_url,
         metrics: { requests: 0, success_rate: 0, avg_response_time: 0 }
       };
-
       await createAgent(agentData);
       clearInterval(progressInterval);
       setProgress(100);
@@ -91,7 +94,26 @@ export function CreateAgentForm() {
       setLoading(false);
     }
   };
-
+  const createNewRepo = async (repoName: string,) => {
+    try {
+      const options = {
+        headers: {
+          Authorization: `token ${localStorage.getItem('githubToken')}`,
+          Accept: 'application/vnd.github.v3+json',
+        },
+      };
+      const response = await axios.post('https://api.github.com/repos/sauravdev/wisedroids-ai-agents/generate',
+        {"name":`wisedroids_${repoName}`,"description":"This repository was created by Wisedroids","include_all_branches":false,"private":false},
+        options
+      )
+      const data = await response.data;
+      return data;
+    } catch (error) {
+      console.error('Error creating new repository:', error);
+      setErrors({ ...errors, repo: 'Failed to create repository' });
+      
+    }
+  }
   if (loading) {
     return (
       <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center">

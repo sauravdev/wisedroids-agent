@@ -14,7 +14,7 @@ import { convertCodeToWebAPP } from '@/lib/openai/client';
 export function AgentsList() {
   const { agents, loading, error } = useAgents();
   const { handleDelete, handleEdit, handleAnalytics } = useAgentActions();
-  const { hasReachedLimit, remainingAgents,isChecking } = useAgentLimit();
+  const { hasReachedLimit, remainingAgents,isChecking,subscriptionType } = useAgentLimit();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading,setLoading] = useState(false);
   const loginWithGitHub = () => {
@@ -95,26 +95,7 @@ export function AgentsList() {
       console.log(error)
     }
   }
-  const forkRepo = async (token:string) => { 
-    try {
-      const options = { 
-        headers: {
-          Authorization: `token ${token}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      }
-      const response = await axios.post(`https://api.github.com/repos/sauravdev/wisedroids-ai-agents/forks`, {}, options);
-      if (!response.data) {
-        throw new Error('Failed to create file');
-      }
-      const data = await response.data;
-      console.log('Repo forked successfully:', data);
-    } catch (error) {
-      
-      console.error('Error fork repo:', error);
-    }
-  }
-  const createFile = async (repoUrl:string,code:string) => {
+  const createFile = async (repoUrl: string, code: string) => {
     try {
       const options = {
         headers: {
@@ -122,27 +103,45 @@ export function AgentsList() {
           Accept: 'application/vnd.github.v3+json',
         },
       };
-      const ehanceCode = await convertCodeToWebAPP(code);
-      const base64Content = btoa(ehanceCode);
+      
+      const enhancedCode = await convertCodeToWebAPP(code);
+      const base64Content = btoa(enhancedCode);
+      
       const payload = {
         "message": "wisedroid created a file main.py",
         "content": base64Content,
         "branch": "main"
+      };
+      
+      // Try to check if file exists, but handle the case where it doesn't
+      try {
+        const checkExistingFile = await axios.get(`https://api.github.com/repos/${repoUrl}/contents/main.py`, options);
+        if (checkExistingFile.status === 200 && checkExistingFile.data && checkExistingFile.data.sha) {
+          payload.sha = checkExistingFile.data.sha;
+        }
+      } catch (fileError) {
+        // File doesn't exist, which is fine - we'll create it
+        console.log('File does not exist yet, will create new one');
       }
-      const checkExistingFile = await axios.get(`https://api.github.com/repos/${repoUrl}/contents/main.py`, options);
-      if(checkExistingFile.status === 200) {
-        payload.sha = checkExistingFile.data.sha;
-      }
-      const response = await axios.put(`https://api.github.com/repos/${repoUrl}/contents/main.py`,payload, options);
-      if(!response.data) {
+      
+      // Create or update the file
+      const response = await axios.put(
+        `https://api.github.com/repos/${repoUrl}/contents/main.py`,
+        payload, 
+        options
+      );
+      
+      if (!response || !response.data) {
         throw new Error('Failed to create file');
       }
-      const data = await response.data;
+      
       console.log('File created successfully');
+      return response.data;
     } catch (error) {
       console.error('Error creating file:', error);
+      throw error; // Re-throw to allow calling function to handle the error
     }
-}
+  };
 const checkGithubConnection = async () => {
   try {
 
@@ -154,7 +153,6 @@ const checkGithubConnection = async () => {
         const url = import.meta.env.VITE_API || 'http://localhost:5002/api/v1';
         const response = await axios.post(`${url}/candidate/github-login`, { code });
         if (response.data.success) {
-            await forkRepo(response.data.data);
             setIsConnected(true);
             localStorage.setItem('githubToken', response.data.data);
         } else {
@@ -215,7 +213,7 @@ useEffect(() => {
       {!hasReachedLimit && remainingAgents > 0 && (
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
           <p className="text-sm text-blue-700">
-            You can create {remainingAgents} more agent{remainingAgents !== 1 ? 's' : ''} on the free plan
+            You can create {remainingAgents} more agent{remainingAgents !== 1 ? 's' : ''} on the {subscriptionType} plan
           </p>
         </div>
       )}
@@ -246,8 +244,9 @@ useEffect(() => {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {agents.map((agent) => (
-            <AgentCard
+          {agents.map((agent) => {
+            if(!agent.is_public) { 
+              return <AgentCard
               key={agent.id}
               agent={agent}
               onDelete={handleDelete}
@@ -256,7 +255,8 @@ useEffect(() => {
               onDeploy={(id,name,repoURL,repoName,code,buildCommand,startCommand)=>handleDeploy(id,name,repoURL,repoName,code,buildCommand,startCommand)}
               isLoading={isLoading}
             />
-          ))}
+            }
+})}
         </div>
       )}
     </div>

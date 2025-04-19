@@ -43,3 +43,22 @@ export async function deleteDeployedAgent(service_id:string | null) {
       throw new Error('Failed to enhance code. Please try again.');
     }
 }
+
+export async function deleteGitRepo(repoURL:string) {
+  try {
+    const options = {
+      headers: {
+        Authorization: `token ${localStorage.getItem('githubToken')}`,
+        Accept: 'application/vnd.github.v3+json',
+      }
+    };
+    const response = await axios.delete(repoURL, options);
+    if (response.data) {
+      console.log('Repository deleted successfully');
+    }
+  } catch (error) {
+    console.error('Error deleting repository:', error);
+    throw new Error('Failed to delete repository. Please try again.');
+    
+  }
+}

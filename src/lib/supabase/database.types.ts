@@ -25,6 +25,7 @@ export interface Database {
           metrics: Json
           code: string | null
           service_id: string | null
+          repo_url: string | null
           created_at: string
           updated_at: string
         }
