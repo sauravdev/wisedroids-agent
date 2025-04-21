@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { signIn, signUp, signInWithGoogle } from '@/lib/supabase/auth';
-
+import { useNavigate } from 'react-router-dom';
 interface AuthFormProps {
   mode: 'login' | 'signup';
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -38,6 +39,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     try {
       const { error } = await signInWithGoogle();
       if (error) throw error;
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       setError(err.message);
     } finally {
