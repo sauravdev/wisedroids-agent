@@ -78,7 +78,7 @@ export function AgentDeployModal({ isOpen, onClose, onDeploy, agent, isLoading }
         Accept: 'application/vnd.github.v3+json',
       },
     }
-    const response = await axios.get(`https://api.github.com/user/repos`,options);
+    const response = await axios.get(`https://api.github.com/user/repos?sort=created`,options);
     if (!response.data) {
       throw new Error('Failed to fetch repository');
     }
