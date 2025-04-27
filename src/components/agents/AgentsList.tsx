@@ -18,11 +18,18 @@ export function AgentsList() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading,setLoading] = useState(false);
   const loginWithGitHub = () => {
-    const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
-    const redirectURI = 'https://www.wisedroids.ai/dashboard';
-    const scope = 'repo'; // Grants write access to repositories
-    
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=${scope}`;
+    if(isConnected) {
+      localStorage.removeItem('githubToken');
+      setIsConnected(false);
+      window.location.reload();
+    } else {
+      const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
+      const redirectURI = 'https://www.wisedroids.ai/dashboard';
+      const scope = 'repo'; // Grants write access to repositories
+      
+      window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=${scope}`;
+    }
+
 };
 
   const updateAgentStatus = async (id:string,service_id:string,api_endpoint:string) => {

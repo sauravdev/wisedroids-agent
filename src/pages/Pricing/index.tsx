@@ -2,6 +2,17 @@ import { PricingCard } from '@/components/PricingCard';
 
 const plans = [
   {
+    name: "Free",
+    price: "0",
+    priceId: "basic",
+    features: [
+      "Up to 2 agents",
+      "Basic integrations",
+      "Community support"
+    ],
+    href : "https://wisedroids.ai/dashboard",
+  },
+  {
     name: "Starter",
     price: "199",
     priceId: "starter",
