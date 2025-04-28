@@ -77,7 +77,7 @@ export function CreateAgentForm() {
         status: 'draft',
         api_key: null,
         api_endpoint: null,
-        repo_url: repo.html_url,
+        repo_url: repo.html_url || null,
         metrics: { requests: 0, success_rate: 0, avg_response_time: 0 }
       };
       await createAgent(agentData);

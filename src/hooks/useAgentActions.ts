@@ -19,7 +19,7 @@ export function useAgentActions() {
     try {
       await deleteAgent(id);
       await deleteDeployedAgent(service_id);
-      await deleteGitRepo(repoUrl);
+      // await deleteGitRepo(repoUrl);
       window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete agent');

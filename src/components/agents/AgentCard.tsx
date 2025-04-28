@@ -5,18 +5,35 @@ import type { Agent } from '@/lib/supabase/agents';
 import { AgentDeployModal } from './AgentDeployModel';
 
 interface AgentCardProps {
-  agent: Agent;
-  onDelete: (id: string,service_id:string | null,repoUrl:string) => void;
-  onDeploy: (id: string, name: string, repoUrl: string,repoName:string,code:string,buildCommand:string,startCommand:string) => void;
+  agent: {
+    id: string;
+    name: string;
+    description: string;
+    status: string;
+    metrics?: {
+      requests: number;
+      success_rate: number;
+      avg_response_time: number;
+    };
+    api_endpoint?: string;
+    service_id?: string;
+    repo_url?: string;
+    code?: string;
+    build_command?: string;
+    start_command?: string;
+  };
+  onDelete: (id: string, service_id: string | null, repoUrl: string) => void;
   onEdit: (id: string) => void;
   onAnalytics: (id: string) => void;
-  readOnly?: boolean;
+  onDeploy: (id: string, name: string, repoURL: string, repoName: string, code: string, buildCommand: string, startCommand: string) => void;
   isLoading: boolean;
+  deploymentStatus: 'deployed' | 'deploying' | 'failed' | 'draft';
+  readOnly?: boolean;
 }
 
-export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, readOnly, isLoading }: AgentCardProps) {
+export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, isLoading, deploymentStatus, readOnly }: AgentCardProps) {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
-  const metrics = agent.metrics as { requests: number; success_rate: number; avg_response_time: number };
+  const metrics = agent.metrics || { requests: 0, success_rate: 0, avg_response_time: 0 };
 
   const handleDeployClick = () => {
     setIsDeployModalOpen(true);
@@ -27,6 +44,37 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
     setIsDeployModalOpen(false);
   };
 
+  const getStatusBadge = () => {
+    switch (deploymentStatus) {
+      case 'deployed':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Deployed
+          </span>
+        );
+      case 'deploying':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+            Deploying...
+          </span>
+        );
+      case 'failed':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+            Failed
+          </span>
+        );
+      case 'draft':
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-800">
+            Draft
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
       <div className="flex items-center justify-between">
@@ -34,11 +82,7 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
           <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
           <p className="text-sm text-gray-500 mt-1">{agent.description}</p>
         </div>
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-          agent.status === 'deployed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-        }`}>
-          {agent.status}
-        </span>
+        {getStatusBadge()}
       </div>
       
       <div className="mt-4 grid grid-cols-3 gap-4">
@@ -74,7 +118,7 @@ export function AgentCard({ agent, onDelete, onDeploy, onEdit, onAnalytics, read
               <BarChart2 className="h-5 w-5" />
             </button>
             <button
-              onClick={() => onDelete(agent.id,agent.service_id,agent.repo_url)}
+              onClick={() => onDelete(agent.id, agent.service_id || null, agent.repo_url || '')}
               className="p-2 text-red-400 hover:text-red-600"
               title="Delete Agent"
             >
