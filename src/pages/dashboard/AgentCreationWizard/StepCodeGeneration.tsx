@@ -156,7 +156,7 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
             </button>
             <button
               onClick={handleExecuteCode}
-              disabled={isExecuting || !generatedCode}
+              disabled={isExecuting}
               className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
             >
               {isExecuting ? (
@@ -214,7 +214,7 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
           />
           <button
             onClick={handleEnhanceCode}
-            disabled={isEnhancing || !generatedCode}
+            disabled={isEnhancing}
             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
           >
             {isEnhancing ? (
