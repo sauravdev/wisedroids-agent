@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCw, Wand2, Play } from 'lucide-react';
-import { generateAgentCode, enhanceCode } from '@/lib/openai/client';
+import React, { useState, useEffect } from "react";
+import { RefreshCw, Wand2, Play } from "lucide-react";
+import { generateAgentCode, enhanceCode } from "@/lib/openai/client";
 // import { executeCode } from '@/lib/code/executor';
 // import { initializePyodide, getInstallationStatus } from '@/lib/pyodide/interpreter';
-import axios from 'axios';
+import axios from "axios";
 
 interface StepCodeGenerationProps {
   agentDescription: string;
@@ -13,16 +13,28 @@ interface StepCodeGenerationProps {
   agentName: string;
   code: string;
   onSaveCode: (code: string) => void;
+  errors?: {
+    generatedCode?: string;
+  };
 }
 
-export function StepCodeGeneration({ agentDescription,agentCapabilities,agentIntegrations,agentPersonality,agentName,code, onSaveCode }: StepCodeGenerationProps) {
+export function StepCodeGeneration({
+  agentDescription,
+  agentCapabilities,
+  agentIntegrations,
+  agentPersonality,
+  agentName,
+  code,
+  onSaveCode,
+  errors,
+}: StepCodeGenerationProps) {
   const [generatedCode, setGeneratedCode] = useState(code);
-  const [output, setOutput] = useState('');
+  const [output, setOutput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enhancementPrompt, setEnhancementPrompt] = useState('');
+  const [enhancementPrompt, setEnhancementPrompt] = useState("");
   const [isPyodideReady, setIsPyodideReady] = useState(false);
   // const [installationStatus, setInstallationStatus] = useState(getInstallationStatus());
 
@@ -48,7 +60,7 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
   //   const interval = setInterval(() => {
   //     // const status = getInstallationStatus();
   //     // setInstallationStatus(status);
-      
+
   //     // If installation is complete, update Pyodide ready state
   //     if (!status.isInstalling && isPyodideReady === false) {
   //       setIsPyodideReady(true);
@@ -60,20 +72,30 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
 
   const handleGenerateCode = async () => {
     if (!agentDescription.trim()) {
-      setError('Please provide a description for your agent.');
+      setError("Please provide a description for your agent.");
       return;
     }
 
     setIsGenerating(true);
     setError(null);
-    setOutput('');
+    setOutput("");
 
     try {
-      const code = await generateAgentCode(agentDescription,agentCapabilities,agentIntegrations,agentPersonality,agentName);
-      setGeneratedCode(code);
-      onSaveCode(code);
+      const code = await generateAgentCode(
+        agentDescription,
+        agentCapabilities,
+        agentIntegrations,
+        agentPersonality,
+        agentName
+      );
+      if (code.success) {
+        setGeneratedCode(code);
+        onSaveCode(code);
+      } else {
+        setError(code.message.error);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate code');
+      setError(err instanceof Error ? err.message : "Failed to generate code");
     } finally {
       setIsGenerating(false);
     }
@@ -81,30 +103,28 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
 
   const handleExecuteCode = async () => {
     if (!generatedCode.trim()) {
-      setError('No code to execute. Please generate code first.');
+      setError("No code to execute. Please generate code first.");
       return;
     }
 
     setIsExecuting(true);
     setError(null);
-    setOutput('');
+    setOutput("");
 
     try {
-      // const result = await executeCode(generatedCode);
-      // if(result.error) {
-      //   setError(result.error);
-      // }
-      // setOutput(result.output.stdout || result.output.stderr || 'No output');
-      const response = await axios.post('https://agentapi.wisedroids.ai/execute', {
-        code: generatedCode,
-      })
+      const response = await axios.post(
+        "https://agentapi.wisedroids.ai/execute",
+        {
+          code: generatedCode,
+        }
+      );
       if (response.data.output) {
-        setOutput(response.data.output || 'No output');
+        setOutput(response.data.output || "No output");
       } else {
         setError(response.data.error);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to execute code');
+      setError(err instanceof Error ? err.message : "Failed to execute code");
     } finally {
       setIsExecuting(false);
     }
@@ -112,7 +132,7 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
 
   const handleEnhanceCode = async () => {
     if (!generatedCode.trim() || !enhancementPrompt.trim()) {
-      setError('Please provide both code and enhancement instructions.');
+      setError("Please provide both code and enhancement instructions.");
       return;
     }
 
@@ -123,9 +143,9 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
       const enhanced = await enhanceCode(generatedCode, enhancementPrompt);
       setGeneratedCode(enhanced);
       onSaveCode(enhanced);
-      setEnhancementPrompt('');
+      setEnhancementPrompt("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to enhance code');
+      setError(err instanceof Error ? err.message : "Failed to enhance code");
     } finally {
       setIsEnhancing(false);
     }
@@ -182,9 +202,16 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
               onSaveCode(e.target.value);
             }}
             rows={15}
-            className="w-full font-mono text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            className={`w-full font-mono text-sm rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 ${
+              errors?.generatedCode
+                ? "border-red-500 focus:border-red-500"
+                : "border-gray-300 focus:border-indigo-300"
+            }`}
             placeholder="Generated code will appear here..."
           />
+          {errors?.generatedCode && (
+            <p className="mt-1 text-sm text-red-600">{errors.generatedCode}</p>
+          )}
         </div>
 
         {error && (
@@ -195,13 +222,20 @@ export function StepCodeGeneration({ agentDescription,agentCapabilities,agentInt
 
         {output && (
           <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Execution Output:</h4>
-            <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono bg-gray-100 p-3 rounded">{output}</pre>
+            <h4 className="text-sm font-medium text-gray-900 mb-2">
+              Execution Output:
+            </h4>
+            <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono bg-gray-100 p-3 rounded">
+              {output}
+            </pre>
           </div>
         )}
 
         <div className="space-y-2">
-          <label htmlFor="enhancement" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="enhancement"
+            className="block text-sm font-medium text-gray-700"
+          >
             Enhancement Instructions
           </label>
           <textarea

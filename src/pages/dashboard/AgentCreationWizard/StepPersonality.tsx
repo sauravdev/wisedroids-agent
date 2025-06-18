@@ -3,9 +3,12 @@ import React, { useState, useEffect } from 'react';
 interface StepPersonalityProps {
   traits: Record<string, number>;
   setTraits: (traits: Record<string, number>) => void;
+  errors?: {
+    personality?: string;
+  };
 }
 
-export function StepPersonality({ traits, setTraits }: StepPersonalityProps) {
+export function StepPersonality({ traits, setTraits, errors }: StepPersonalityProps) {
   const [inputValue, setInputValue] = useState('');
   
   // Initialize input value when component mounts or traits change
@@ -59,8 +62,11 @@ Formality: 80
 Friendliness: 90
 Conciseness: 70
 Creativity: 85"
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className={`w-full rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 ${
+            errors?.personality ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-indigo-300'
+          }`}
         />
+        {errors?.personality && <p className="mt-1 text-sm text-red-600">{errors.personality}</p>}
       </div>
     </div>
   );

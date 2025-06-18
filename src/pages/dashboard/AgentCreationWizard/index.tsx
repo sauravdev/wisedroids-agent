@@ -10,6 +10,7 @@ import { StepPersonality } from './StepPersonality';
 import { StepIntegrations } from './StepIntegrations';
 import { StepCodeGeneration } from './StepCodeGeneration';
 import axios from 'axios';
+
 interface FormData {
   name: string;
   description: string;
@@ -18,6 +19,15 @@ interface FormData {
   integrations: string[];
   isPublic: boolean;
   generatedCode: string;
+}
+
+interface ValidationErrors {
+  name?: string;
+  description?: string;
+  capabilities?: string;
+  personality?: string;
+  integrations?: string;
+  generatedCode?: string;
 }
 
 const initialFormData: FormData = {
@@ -40,6 +50,7 @@ export function AgentCreationWizard() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     if (hasReachedLimit && !id) {
@@ -61,6 +72,38 @@ export function AgentCreationWizard() {
     }
   }, [existingAgent]);
 
+  const validateStep = (step: number): boolean => {
+    const newErrors: ValidationErrors = {};
+    
+    switch (step) {
+      case 0: // Description step
+        if (!formData.name.trim()) newErrors.name = 'Name is required';
+        if (!formData.description.trim()) newErrors.description = 'Description is required';
+        break;
+      case 1: // Capabilities step
+        if (formData.capabilities.length === 0) newErrors.capabilities = 'At least one capability is required';
+        break;
+      case 2: // Personality step
+        if (Object.keys(formData.personality).length === 0) newErrors.personality = 'At least one personality trait is required';
+        break;
+      case 3: // Integrations step
+        if (formData.integrations.length === 0) newErrors.integrations = 'At least one integration is required';
+        break;
+      case 4: // Code Generation step
+        if (!formData.generatedCode.trim()) newErrors.generatedCode = 'Generated code is required';
+        break;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
+    }
+  };
+
   const steps = [
     {
       title: 'Description',
@@ -70,6 +113,7 @@ export function AgentCreationWizard() {
           description={formData.description}
           setName={(name) => setFormData({ ...formData, name })}
           setDescription={(description) => setFormData({ ...formData, description })}
+          errors={errors}
         />
       ),
     },
@@ -79,6 +123,7 @@ export function AgentCreationWizard() {
         <StepCapabilities
           selectedCapabilities={formData.capabilities}
           setSelectedCapabilities={(capabilities) => setFormData({ ...formData, capabilities })}
+          errors={errors}
         />
       ),
     },
@@ -88,6 +133,7 @@ export function AgentCreationWizard() {
         <StepPersonality
           traits={formData.personality}
           setTraits={(personality) => setFormData({ ...formData, personality })}
+          errors={errors}
         />
       ),
     },
@@ -97,6 +143,7 @@ export function AgentCreationWizard() {
         <StepIntegrations
           selectedIntegrations={formData.integrations}
           setSelectedIntegrations={(integrations) => setFormData({ ...formData, integrations })}
+          errors={errors}
         />
       ),
     },
@@ -111,6 +158,7 @@ export function AgentCreationWizard() {
           agentName={formData.name}
           code={formData.generatedCode}
           onSaveCode={(code) => setFormData({ ...formData, generatedCode: code })}
+          errors={errors}
         />
       ),
     },
@@ -118,6 +166,8 @@ export function AgentCreationWizard() {
 
   const handleSubmit = async () => {
     if (!user) return;
+    if (!validateStep(currentStep)) return;
+    
     setLoading(true);
 
     try {
@@ -133,7 +183,7 @@ export function AgentCreationWizard() {
         status: 'draft',
         api_key: null,
         api_endpoint: null,
-        repo_url : repo.url,
+        repo_url: repo.url,
         metrics: { requests: 0, success_rate: 0, avg_response_time: 0 },
         code: formData.generatedCode
       };
@@ -161,7 +211,8 @@ export function AgentCreationWizard() {
       setLoading(false);
     }
   };
-  const createNewRepo = async (repoName: string,) => {
+
+  const createNewRepo = async (repoName: string) => {
     try {
       const options = {
         headers: {
@@ -172,14 +223,13 @@ export function AgentCreationWizard() {
       const response = await axios.post('https://api.github.com/repos/sauravdev/wisedroids-ai-agents/generate',
         {"name":`wisedroids_${repoName}`,"description":"This repository was created by Wisedroids","include_all_branches":false,"private":false},
         options
-      )
+      );
       const data = await response.data;
       return data;
     } catch (error) {
       console.error('Error creating new repository:', error);
-      
     }
-  }
+  };
 
   if (loadingAgent) {
     return <div>Loading...</div>;
@@ -196,17 +246,16 @@ export function AgentCreationWizard() {
       <div className="mb-8">
         <nav className="flex space-x-4">
           {steps.map((step, index) => (
-            <button
+            <div
               key={index}
-              onClick={() => setCurrentStep(index)}
-              className={`px-3 py-2 text-sm font-medium rounded-md ${
+              className={`px-3 py-2 text-sm font-medium rounded-md cursor-not-allowed ${
                 currentStep === index
                   ? 'bg-indigo-100 text-indigo-700'
-                  : 'text-gray-500 hover:text-gray-700'
+                  : 'text-gray-400'
               }`}
             >
               {step.title}
-            </button>
+            </div>
           ))}
         </nav>
       </div>
@@ -235,7 +284,7 @@ export function AgentCreationWizard() {
           ) : (
             <button
               type="button"
-              onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
+              onClick={handleNext}
               className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
             >
               Next

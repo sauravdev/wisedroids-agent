@@ -12,7 +12,7 @@ export async function generateAgentCode(description: string,capabilities: string
       name : name
     }
     const response = await axios.post(`${url}/openai/wisedroid-agent`,payload);
-    return response.data.data
+    return response.data
   } catch (error) {
     console.error('Error generating code:', error);
     if (error instanceof Error) {

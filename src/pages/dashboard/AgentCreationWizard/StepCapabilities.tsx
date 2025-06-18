@@ -3,9 +3,12 @@ import React from 'react';
 interface StepCapabilitiesProps {
   selectedCapabilities: string[];
   setSelectedCapabilities: (capabilities: string[]) => void;
+  errors?: {
+    capabilities?: string;
+  };
 }
 
-export function StepCapabilities({ selectedCapabilities, setSelectedCapabilities }: StepCapabilitiesProps) {
+export function StepCapabilities({ selectedCapabilities, setSelectedCapabilities, errors }: StepCapabilitiesProps) {
   const handleCapabilitiesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const capabilities = e.target.value.split('\n').filter(cap => cap.trim() !== '');
     setSelectedCapabilities(capabilities);
@@ -31,8 +34,11 @@ Data analysis and visualization
 Task automation
 API integration
 Real-time monitoring"
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className={`w-full rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 ${
+            errors?.capabilities ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-indigo-300'
+          }`}
         />
+        {errors?.capabilities && <p className="mt-1 text-sm text-red-600">{errors.capabilities}</p>}
       </div>
     </div>
   );

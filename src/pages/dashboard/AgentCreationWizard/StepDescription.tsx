@@ -5,9 +5,13 @@ interface StepDescriptionProps {
   description: string;
   setName: (name: string) => void;
   setDescription: (description: string) => void;
+  errors?: {
+    name?: string;
+    description?: string;
+  };
 }
 
-export function StepDescription({ name, description, setName, setDescription }: StepDescriptionProps) {
+export function StepDescription({ name, description, setName, setDescription, errors }: StepDescriptionProps) {
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900">Describe Your Agent</h2>
@@ -22,9 +26,12 @@ export function StepDescription({ name, description, setName, setDescription }: 
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 ${
+            errors?.name ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-indigo-300'
+          }`}
           placeholder="Enter a name for your agent"
         />
+        {errors?.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
       </div>
 
       <div>
@@ -36,9 +43,12 @@ export function StepDescription({ name, description, setName, setDescription }: 
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={6}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+          className={`mt-1 block w-full rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 ${
+            errors?.description ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-indigo-300'
+          }`}
           placeholder="Describe what you want your agent to do in detail..."
         />
+        {errors?.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
       </div>
     </div>
   );
