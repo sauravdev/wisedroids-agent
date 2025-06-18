@@ -89,8 +89,8 @@ export function StepCodeGeneration({
         agentName
       );
       if (code.success) {
-        setGeneratedCode(code);
-        onSaveCode(code);
+        setGeneratedCode(code.data);
+        onSaveCode(code.data);
       } else {
         setError(code.message.error);
       }
