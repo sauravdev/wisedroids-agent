@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Play, BarChart2, Rocket, Loader } from 'lucide-react';
+import { Edit2, Trash2, Play, BarChart2, Rocket, Loader, ActivityIcon } from 'lucide-react';
 import type { Agent } from '@/lib/supabase/agents';
 import { AgentDeployModal } from './AgentDeployModel';
+import { AgentLogsModal } from './AgentLogsModal';
 
 interface AgentCardProps {
   agent: {
@@ -33,6 +34,7 @@ interface AgentCardProps {
 
 export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, isLoading, deploymentStatus, readOnly }: AgentCardProps) {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+  const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
   const metrics = agent.metrics || { requests: 0, success_rate: 0, avg_response_time: 0 };
 
   const handleDeployClick = () => {
@@ -124,6 +126,15 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, isLo
             >
               <Trash2 className="h-5 w-5" />
             </button>
+            {agent.service_id && (
+              <button
+                onClick={() => setIsLogsModalOpen(true)}
+                className="p-2 text-blue-400 hover:text-blue-600"
+                title="View Live Logs"
+              >
+                <ActivityIcon className="h-5 w-5" />
+              </button>
+            )}
           </div>
           
           {agent.status !== 'deployed' ? (
@@ -162,9 +173,16 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, isLo
         isOpen={isDeployModalOpen}
         onClose={() => setIsDeployModalOpen(false)}
         onDeploy={handleDeploySubmit}
-        agent={agent}
+        agent={{ ...agent, code: agent.code || '' }}
         isLoading={isLoading}
       />
+      {agent.service_id && (
+        <AgentLogsModal
+          serviceId={agent.service_id}
+          isOpen={isLogsModalOpen}
+          onClose={() => setIsLogsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

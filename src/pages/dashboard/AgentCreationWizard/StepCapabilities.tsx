@@ -17,7 +17,8 @@ export function StepCapabilities({ selectedCapabilities, setSelectedCapabilities
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900">Agent Capabilities</h2>
-      <p className="text-gray-600">Describe your agent's capabilities, one per line.</p>
+      <p className="text-gray-600">What level of autonomy and decision-making capability should each agent have, should agent decide or leave upto human in the loop?
+      </p>
       
       <div>
         <label htmlFor="capabilities" className="block text-sm font-medium text-gray-700 mb-2">

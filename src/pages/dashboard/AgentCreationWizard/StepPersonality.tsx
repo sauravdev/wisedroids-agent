@@ -44,8 +44,7 @@ export function StepPersonality({ traits, setTraits, errors }: StepPersonalityPr
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900">Agent Personality</h2>
       <p className="text-gray-600">
-        Describe your agent's personality traits using a scale from 0 to 100.
-        Format: Trait: Value (one per line)
+      What are the ethical and safety constraints for the agents’ behavior, and how will they be enforced?
       </p>
       
       <div>

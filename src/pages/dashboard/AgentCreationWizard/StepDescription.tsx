@@ -15,7 +15,7 @@ export function StepDescription({ name, description, setName, setDescription, er
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900">Describe Your Agent</h2>
-      <p className="text-gray-600">Provide a name and detailed description of what you want your AI agent to do.</p>
+      <p className="text-gray-600">What specific goals and tasks should the agents do?</p>
       
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700">

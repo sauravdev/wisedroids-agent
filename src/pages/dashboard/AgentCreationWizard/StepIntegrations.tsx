@@ -17,7 +17,7 @@ export function StepIntegrations({ selectedIntegrations, setSelectedIntegrations
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900">Integrations</h2>
-      <p className="text-gray-600">List the platforms and tools your agent should integrate with, one per line.</p>
+      <p className="text-gray-600">What are and how will the agents integrate with external tools, APIs, or data sources, or MCP servers?</p>
       
       <div>
         <label htmlFor="integrations" className="block text-sm font-medium text-gray-700 mb-2">
