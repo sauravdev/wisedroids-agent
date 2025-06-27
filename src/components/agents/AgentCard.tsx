@@ -11,6 +11,7 @@ interface AgentCardProps {
     name: string;
     description: string;
     status: string;
+    is_public: boolean;
     metrics?: {
       requests: number;
       success_rate: number;
@@ -27,12 +28,13 @@ interface AgentCardProps {
   onEdit: (id: string) => void;
   onAnalytics: (id: string) => void;
   onDeploy: (id: string, name: string, repoURL: string, repoName: string, code: string, buildCommand: string, startCommand: string) => void;
+  onTogglePublic: (id: string, is_public: boolean) => void;
   isLoading: boolean;
   deploymentStatus: 'deployed' | 'deploying' | 'failed' | 'draft';
   readOnly?: boolean;
 }
 
-export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, isLoading, deploymentStatus, readOnly }: AgentCardProps) {
+export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onTogglePublic, isLoading, deploymentStatus, readOnly }: AgentCardProps) {
   const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
   const metrics = agent.metrics || { requests: 0, success_rate: 0, avg_response_time: 0 };
@@ -81,7 +83,24 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, isLo
     <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
+          <div className="flex items-center gap-4">
+            <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
+            {!readOnly && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onTogglePublic(agent.id, !agent.is_public)}
+                  className={`relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${agent.is_public ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                  title={agent.is_public ? 'Make private' : 'Make public'}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200 ${agent.is_public ? 'translate-x-5' : 'translate-x-0'}`}
+                  />
+                </button>
+                <span className="text-sm text-gray-500">{agent.is_public ? 'Public' : 'Private'}</span>
+              </div>
+            )}
+          </div>
           <p className="text-sm text-gray-500 mt-1">{agent.description}</p>
         </div>
         {getStatusBadge()}

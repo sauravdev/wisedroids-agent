@@ -132,9 +132,33 @@ export function AgentsList() {
       return { success: false, error };
     }
   };
+
+  const updateAgentPublicStatus = async (id: string, is_public: boolean) => {
+    try {
+      const { data, error } = await supabase
+        .from("agents")
+        .update({
+          is_public: is_public,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error updating agent status:", error);
+        return { success: false, error };
+      }
+      window.location.reload();
+      return { success: true, data };
+    } catch (error) {
+      console.error("Exception updating agent status:", error);
+      return { success: false, error };
+    }
+  };
+
   function toBase64Utf8(str: string) {
     return btoa(unescape(encodeURIComponent(str)));
   }
+
   const handleDeploy = async (
     agent_id: string,
     name: string,
@@ -183,6 +207,10 @@ export function AgentsList() {
       });
       console.log(error);
     }
+  };
+
+  const handleTogglePublic = async (agentId: string, isPublic: boolean) => {
+    await updateAgentPublicStatus(agentId, isPublic);
   };
 
   const createFile = async (repoUrl: string, code: string) => {
@@ -406,45 +434,33 @@ export function AgentsList() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {agents.map((agent) => {
-            if (!agent.is_public) {
-              const deploymentStatus = getDeploymentStatus(agent);
-              return (
-                <AgentCard
-                  key={agent.id}
-                  agent={agent}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  onAnalytics={handleAnalytics}
-                  onDeploy={(
-                    id,
-                    name,
-                    repoURL,
-                    repoName,
-                    code,
-                    buildCommand,
-                    startCommand
-                  ) =>
-                    handleDeploy(
-                      id,
-                      name,
-                      repoURL,
-                      repoName,
-                      code,
-                      buildCommand,
-                      startCommand
-                    )
-                  }
-                  isLoading={
-                    loadingAgents.get(agent.id) ||
-                    deploymentStatus === "deploying"
-                  }
-                  deploymentStatus={deploymentStatus}
-                />
-              );
-            }
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {agents.map((agent) => (
+            <AgentCard
+              key={agent.id}
+              agent={{
+                id: agent.id,
+                name: agent.name,
+                description: agent.description,
+                status: agent.status,
+                is_public: agent.is_public,
+                metrics: agent.metrics as { requests: number; success_rate: number; avg_response_time: number; } | undefined,
+                api_endpoint: agent.api_endpoint || undefined,
+                service_id: agent.service_id || undefined,
+                repo_url: agent.repo_url || undefined,
+                code: agent.code || undefined,
+                build_command: (agent as any).build_command || 'npm run build',
+                start_command: (agent as any).start_command || 'npm start',
+              }}
+              onDelete={handleDelete}
+              onEdit={handleEdit}
+              onAnalytics={handleAnalytics}
+              onDeploy={handleDeploy}
+              onTogglePublic={handleTogglePublic}
+              isLoading={loadingAgents.get(agent.id) || false}
+              deploymentStatus={getDeploymentStatus(agent)}
+            />
+          ))}
         </div>
       )}
     </div>
