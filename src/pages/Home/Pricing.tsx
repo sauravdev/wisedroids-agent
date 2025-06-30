@@ -1,39 +1,19 @@
-import { PricingCard } from '@/components/PricingCard';
+import { PricingCard } from "@/components/PricingCard";
 
 const plans = [
   {
     name: "Free",
-    price: "0",
+    price: "₹0",
     priceId: "basic",
-    features: [
-      "Up to 2 agents",
-      "Basic integrations",
-      "Community support"
-    ],
-    href : "https://wisedroids.ai/dashboard",
+    features: ["Up to 2 agents", "Basic integrations", "Community support"],
+    href: "https://wisedroids.ai/dashboard",
   },
   {
     name: "Starter",
-    price: "199",
+    price: "₹999",
     priceId: "starter",
-    features: [
-      "Up to 10 agents",
-      "Basic integrations",
-      "Community support"
-    ],
-    href : "https://buy.stripe.com/test_fZe289bpHgl3cSIaEH",
-  },
-  {
-    name: "Professional",
-    price: "599",
-    priceId: "professional",
-    features: [
-      "Up to 50 agents",
-      "Advanced integrations",
-      "Priority support",
-      "Custom agent training"
-    ],
-    href : "https://buy.stripe.com/test_dR6145bpHfgZ6ukdQU",
+    features: ["Up to 10 agents", "Basic integrations", "Community support"],
+    href: "https://rzp.io/rzp/32U7eBK7",
   },
   {
     name: "Enterprise",
@@ -42,13 +22,12 @@ const plans = [
       "Unlimited agents",
       "Dedicated account manager",
       "On-premises deployment",
-      "Advanced security features"
-    ]
-  }
+      "Advanced security features",
+    ],
+  },
 ];
 
 export function Pricing() {
-
   return (
     <div className="py-20 bg-gray-50">
       <div className="container mx-auto px-4">
