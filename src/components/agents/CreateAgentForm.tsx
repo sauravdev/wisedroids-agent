@@ -45,7 +45,6 @@ export function CreateAgentForm() {
     if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.description) newErrors.description = 'Description is required';
     if (formData.capabilities.length === 0) newErrors.capabilities = 'Select at least one capability';
-    if (Object.keys(formData.personality).length === 0) newErrors.personality = 'Set personality traits';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
