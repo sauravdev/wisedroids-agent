@@ -58,13 +58,11 @@ export function useAgentLimit() {
   }, [user?.email, subscriptionData?.subscription_status]);
 
   // Determine tier limit
-  const subscription_type = subscriptionData?.subscription_type || null;
+  const subscription_type = subscriptionData?.subscription_tier || null;
   let FREE_TIER_LIMIT = 2; // Default free tier
 
-  if (subscription_type === "WiseDroids Starter") {
+  if (subscription_type === "Monthly Pro") {
     FREE_TIER_LIMIT = 10;
-  } else if (subscription_type === "WiseDroids Professional") {
-    FREE_TIER_LIMIT = 50;
   }
   const privateAgents = agents.filter((el)=>!el.is_public);
   const hasReachedLimit = privateAgents.length >= FREE_TIER_LIMIT;
