@@ -22,6 +22,7 @@ import { CookiePolicy } from './pages/Cookeis';
 import { BlogPage } from './pages/Blog';
 import { Documentation } from './pages/Docs';
 import {APIReference} from './pages/Api';
+import Playground from './pages/Playground';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/docs" element={<Documentation />} />
             <Route path="/api" element={<APIReference />} />
+            <Route path="/playground" element={<Playground />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route 
               path="/login" 

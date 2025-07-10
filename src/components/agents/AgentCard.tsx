@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Play, BarChart2, Rocket, Loader, ActivityIcon } from 'lucide-react';
+import { Edit2, Trash2, Play, BarChart2, Rocket, Loader, ActivityIcon, RefreshCw } from 'lucide-react';
 import type { Agent } from '@/lib/supabase/agents';
 import { AgentDeployModal } from './AgentDeployModel';
 import { AgentLogsModal } from './AgentLogsModal';
@@ -23,32 +23,58 @@ interface AgentCardProps {
     code?: string;
     build_command?: string;
     start_command?: string;
+    url?: string; // Added url to agent type
   };
   onDelete: (id: string, service_id: string | null, repoUrl: string) => void;
   onEdit: (id: string) => void;
   onAnalytics: (id: string) => void;
   onDeploy: (id: string, name: string, repoURL: string, repoName: string, code: string, buildCommand: string, startCommand: string) => void;
+  onReDeploy: (id: string, name: string, repoURL: string, repoName: string, code: string, buildCommand: string, startCommand: string) => void;
   onTogglePublic: (id: string, is_public: boolean) => void;
   isLoading: boolean;
   deploymentStatus: 'deployed' | 'deploying' | 'failed' | 'draft';
   readOnly?: boolean;
 }
 
-export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onTogglePublic, isLoading, deploymentStatus, readOnly }: AgentCardProps) {
-  const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onReDeploy, onTogglePublic, isLoading, deploymentStatus, readOnly }: AgentCardProps) {
+  // Remove isDeployModalOpen and modal logic
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
   const metrics = agent.metrics || { requests: 0, success_rate: 0, avg_response_time: 0 };
 
+  // New deploy click: call onDeploy directly
   const handleDeployClick = () => {
-    setIsDeployModalOpen(true);
+    onDeploy(
+      agent.id,
+      agent.name,
+      agent.repo_url || '',
+      agent.name,
+      agent.code || '',
+      agent.build_command || '',
+      agent.start_command || ''
+    );
   };
 
-  const handleDeploySubmit = (agentId: string, name: string, repoUrl: string,repoName:string,code:string,buildCommand:string,startCommand:string) => {
-    onDeploy(agentId, name, repoUrl,repoName,code,buildCommand,startCommand);
-    setIsDeployModalOpen(false);
+  // Re-deploy click: call onReDeploy directly
+  const handleReDeployClick = () => {
+    onReDeploy(
+      agent.id,
+      agent.name,
+      agent.repo_url || '',
+      agent.name,
+      agent.code || '',
+      agent.build_command || '',
+      agent.start_command || ''
+    );
   };
 
   const getStatusBadge = () => {
+    if (agent.url) {
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          Deployed
+        </span>
+      );
+    }
     switch (deploymentStatus) {
       case 'deployed':
         return (
@@ -155,8 +181,26 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onTo
               </button>
             )}
           </div>
-          
-          {agent.status !== 'deployed' ? (
+          {/* Deploy/Test UI */}
+          {agent.url ? (
+            <div className="flex gap-2">
+              <button
+                onClick={handleReDeployClick}
+                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+                {isLoading ? 'Re-deploying...' : 'Re-deploy'}
+              </button>
+              <button
+                onClick={() => window.open(agent.url, '_blank')}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              >
+                <Play className="h-4 w-4" />
+                Test Agent
+              </button>
+            </div>
+          ) : (
             <button
               onClick={handleDeployClick}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
@@ -165,36 +209,11 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onTo
               {isLoading ? <Loader className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
               {isLoading ? 'Deploying...' : 'Deploy'}
             </button>
-          ) : (
-            <div>
-            <button
-              onClick={handleDeployClick}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
-              {isLoading ? 'Deploying...' : 'Re Deploy'}
-            </button>
-            <a
-              href={agent.api_endpoint}
-              target='_blank'
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 mt-2"
-            >
-              <Play className="h-4 w-4" />
-              Test Agent
-            </a>
-            </div>
           )}
         </div>
       )}
 
-      <AgentDeployModal
-        isOpen={isDeployModalOpen}
-        onClose={() => setIsDeployModalOpen(false)}
-        onDeploy={handleDeploySubmit}
-        agent={{ ...agent, code: agent.code || '' }}
-        isLoading={isLoading}
-      />
+      {/* Remove AgentDeployModal */}
       {agent.service_id && (
         <AgentLogsModal
           serviceId={agent.service_id}

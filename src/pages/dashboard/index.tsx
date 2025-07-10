@@ -1,9 +1,15 @@
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AgentsList } from '@/components/agents/AgentsList';
 import { AgentCreationWizard } from './AgentCreationWizard';
 import { AgentTestInterface } from '@/components/agents/AgentTestInterface';
 import { AgentAnalytics } from './AgentAnalytics';
+
+// Wrapper component to extract agent ID from URL params
+function AgentTestWrapper() {
+  const { id } = useParams<{ id: string }>();
+  return <AgentTestInterface agentId={id!} />;
+}
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -27,7 +33,7 @@ export function Dashboard() {
         <Route index element={<AgentsList />} />
         <Route path="create-agent" element={<AgentCreationWizard />} />
         <Route path="edit-agent/:id" element={<AgentCreationWizard />} />
-        <Route path="agents/:id/test" element={<AgentTestInterface agentId="" apiEndpoint="" apiKey="" />} />
+        <Route path="agents/:id/test" element={<AgentTestWrapper />} />
         <Route path="agents/:id/analytics" element={<AgentAnalytics />} />
       </Routes>
     </div>

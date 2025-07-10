@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Send, Clock, Play, AlertCircle, CheckCircle, Loader2, Code, Terminal } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { getAgentById } from '@/lib/supabase/agents';
+import { Clock, Play, AlertCircle, CheckCircle, Loader2, Code, Terminal } from 'lucide-react';
 
-interface AgentTestInterfaceProps {
-  agentId: string;
-  apiEndpoint?: string;
-  apiKey?: string;
+interface Agent {
+  id: string;
+  name: string;
+  description: string;
+  code?: string;
+  html?: string;
 }
 
 interface TestResult {
@@ -19,35 +22,33 @@ interface TestResult {
   logs?: string[];
 }
 
-interface Agent {
-  id: string;
-  name: string;
-  description: string;
-  code?: string;
-  html?: string;
-  api_endpoint?: string;
-  api_key?: string;
-}
-
-export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
+export default function Playground() {
+  const [searchParams] = useSearchParams();
+  const agentId = searchParams.get('agent_id');
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [agentLoading, setAgentLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [input, setInput] = useState('');
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [currentExecution, setCurrentExecution] = useState<{
     startTime: number;
     logs: string[];
   } | null>(null);
 
-  // Fetch agent data from Supabase
   useEffect(() => {
     async function fetchAgent() {
+      console.log(agentId)
+      if (!agentId) {
+        setAgentLoading(false);
+        return;
+      }
+
       setAgentLoading(true);
       setError(null);
       try {
         const agentData = await getAgentById(agentId);
+        console.log(agentData)
         setAgent(agentData);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch agent');
@@ -56,9 +57,7 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
       }
     }
     
-    if (agentId) {
-      fetchAgent();
-    }
+    fetchAgent();
   }, [agentId]);
 
   const addLog = (message: string) => {
@@ -71,7 +70,7 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
   };
 
   const handleExecute = async () => {
-    if (!agentId || !input.trim()) return;
+    if (!agentId || !agent?.code) return;
 
     const startTime = Date.now();
     const testId = `test_${Date.now()}`;
@@ -83,14 +82,13 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
     });
 
     addLog('Starting agent execution...');
-    addLog(`Input: "${input}"`);
+    addLog(`Code: ${agent.code.substring(0, 100)}${agent.code.length > 100 ? '...' : ''}`);
 
     try {
-      // Use the same API call as in Playground.tsx
-      const res = await fetch(`/api/v1/agents/${agentId}/execute`, {
+      const res = await fetch('https://agentapi.wisedroids.ai/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: input.trim() }),
+        body: JSON.stringify({ code: agent.code }),
       });
 
       addLog('API request sent successfully');
@@ -111,7 +109,7 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
       const result: TestResult = {
         id: testId,
         timestamp: new Date(),
-        input: input.trim(),
+        input: '',
         output,
         executionTime,
         status: 'success',
@@ -130,7 +128,7 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
       const result: TestResult = {
         id: testId,
         timestamp: new Date(),
-        input: input.trim(),
+        input: '',
         output: '',
         executionTime,
         status: 'error',
@@ -175,7 +173,7 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
     return (
       <div className="flex items-center justify-center h-64">
         <AlertCircle className="w-8 h-8 text-yellow-500" />
-        <span className="ml-2 text-yellow-600">Agent not found</span>
+        <span className="ml-2 text-yellow-600">Agent not found. Please provide a valid agent_id parameter.</span>
       </div>
     );
   }
@@ -354,4 +352,4 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
       </div>
     </div>
   );
-}
+} 

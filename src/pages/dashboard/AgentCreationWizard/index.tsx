@@ -14,9 +14,9 @@ import axios from 'axios';
 interface FormData {
   name: string;
   description: string;
-  capabilities: string[];
-  personality: Record<string, number>;
-  integrations: string[];
+  capabilities: string;
+  personality: string;
+  integrations: string;
   isPublic: boolean;
   generatedCode: string;
 }
@@ -33,9 +33,9 @@ interface ValidationErrors {
 const initialFormData: FormData = {
   name: '',
   description: '',
-  capabilities: [],
-  personality: {},
-  integrations: [],
+  capabilities: '',
+  personality: '',
+  integrations: '',
   isPublic: false,
   generatedCode: ''
 };
@@ -64,7 +64,7 @@ export function AgentCreationWizard() {
         name: existingAgent.name,
         description: existingAgent.description,
         capabilities: existingAgent.capabilities,
-        personality: existingAgent.personality as Record<string, number>,
+        personality: existingAgent.personality,
         integrations: existingAgent.integrations,
         isPublic: existingAgent.is_public,
         generatedCode: existingAgent.code || ''
@@ -171,7 +171,14 @@ export function AgentCreationWizard() {
     setLoading(true);
 
     try {
-      const repo = await createNewRepo(formData.name);
+      const isConnected = localStorage.getItem("githubToken");
+      let repo = {
+        url : ''
+      }
+      if(isConnected) {
+        repo = await createNewRepo(formData.name);
+      }
+      
       const agentData = {
         user_id: user.id,
         name: formData.name,

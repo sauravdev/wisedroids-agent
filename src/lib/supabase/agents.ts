@@ -64,3 +64,14 @@ export async function deployAgent(id: string) {
   if (error) throw error;
   return data;
 }
+
+export async function getAgentById(id: string) {
+  const { data, error } = await supabase
+    .from('agents')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}

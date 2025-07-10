@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { Github } from "lucide-react";
 import { AgentCard } from "./AgentCard";
 import { useAgents } from "@/hooks/useAgents";
 import { useAgentActions } from "@/hooks/useAgentActions";
 import { useAgentLimit } from "@/hooks/useAgentLimit";
 import axios from "axios";
+import { updateAgent } from '@/lib/supabase/agents';
 import { deployAgent, redeployAgent } from "@/lib/render/deploy";
 import { supabase } from "@/lib/supabase/client";
 import { convertCodeToWebAPP } from "@/lib/openai/client";
@@ -16,11 +16,9 @@ export function AgentsList() {
   const { handleDelete, handleEdit, handleAnalytics } = useAgentActions();
   const { hasReachedLimit, remainingAgents, isChecking, subscriptionType } =
     useAgentLimit();
-  const [isConnected, setIsConnected] = useState(false);
   const [loadingAgents, setLoadingAgents] = useState<Map<string, boolean>>(
     new Map()
   );
-  const [showGitHubError, setShowGitHubError] = useState(false);
 
   // Function to check if deployment is still in progress
   const isDeploymentInProgress = (updatedAt: string) => {
@@ -41,25 +39,7 @@ export function AgentsList() {
     return agent.status;
   };
 
-  const loginWithGitHub = () => {
-    if (isConnected) {
-      localStorage.removeItem("githubToken");
-      setIsConnected(false);
-      window.location.reload();
-    } else {
-      const clientID = import.meta.env.VITE_GITHUB_CLIENT_ID;
-      const redirectURI = "https://www.wisedroids.ai/dashboard";
-      const scope = "repo"; // Grants write access to repositories
-
-      window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientID}&redirect_uri=${redirectURI}&scope=${scope}`;
-    }
-  };
-
   const handleCreateAgent = () => {
-    if (!isConnected) {
-      setShowGitHubError(true);
-      return;
-    }
     window.location.href = "/dashboard/create-agent";
   };
 
@@ -159,6 +139,7 @@ export function AgentsList() {
     return btoa(unescape(encodeURIComponent(str)));
   }
 
+  // New deploy logic
   const handleDeploy = async (
     agent_id: string,
     name: string,
@@ -175,30 +156,67 @@ export function AgentsList() {
     });
 
     try {
-      const payload = {
-        name: name,
-        repo: repoURL,
-        buildCommand: buildCommand,
-        startCommand: startCommand,
-      };
-      await createFile(repoName, code);
-      const existingAgent = agents.find((agent) => agent.id === agent_id);
-      if (existingAgent?.service_id) {
-        const response = await redeployAgent({
-          service_id: existingAgent?.service_id,
+      // Call the new deploy API
+      const response = await axios.post('https://agentapi.wisedroids.ai/run_streamlit', { code });
+      if (response.data && response.data.success && response.data.prodUrl && response.data.app_id) {
+        // Save url and app_id to agent in Supabase
+        await updateAgent(agent_id, {
+          url: response.data.prodUrl,
+          app_id: response.data.app_id,
+          status: 'deployed',
+          updated_at: new Date().toISOString(),
         });
-        if (response.data.success) {
-          updateReDeployAgentStatus(agent_id);
-        }
       }
-      const response = await deployAgent(payload);
-      if (response.data.success) {
-        updateAgentStatus(
-          agent_id,
-          response?.data?.data?.service?.id,
-          response?.data?.data?.service?.serviceDetails?.url
-        );
+      setLoadingAgents((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(agent_id);
+        return newMap;
+      });
+      window.location.reload();
+    } catch (error) {
+      setLoadingAgents((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(agent_id);
+        return newMap;
+      });
+      console.log(error);
+    }
+  };
+
+  // Re-deploy logic - same as deploy but for already deployed agents
+  const handleReDeploy = async (
+    agent_id: string,
+    name: string,
+    repoURL: string,
+    repoName: string,
+    code: string,
+    buildCommand: string,
+    startCommand: string
+  ) => {
+    setLoadingAgents((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(agent_id, true);
+      return newMap;
+    });
+
+    try {
+      // Call the same deploy API for re-deployment
+      const response = await axios.post('https://agentapi.wisedroids.ai/run_streamlit', { code });
+      if (response.data && response.data.success && response.data.prodUrl && response.data.app_id) {
+        // Update url and app_id to agent in Supabase
+        await updateAgent(agent_id, {
+          url: response.data.prodUrl,
+          app_id: response.data.app_id,
+          status: 'deployed',
+          updated_at: new Date().toISOString(),
+        });
       }
+      setLoadingAgents((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(agent_id);
+        return newMap;
+      });
+      window.location.reload();
     } catch (error) {
       setLoadingAgents((prev) => {
         const newMap = new Map(prev);
@@ -213,101 +231,8 @@ export function AgentsList() {
     await updateAgentPublicStatus(agentId, isPublic);
   };
 
-  const createFile = async (repoUrl: string, code: string) => {
-    try {
-      const options = {
-        headers: {
-          Authorization: `token ${localStorage.getItem("githubToken")}`,
-          Accept: "application/vnd.github.v3+json",
-        },
-      };
-
-      const enhancedCode = await convertCodeToWebAPP(code);
-      // const base64Content = btoa(enhancedCode);
-      const base64Content = toBase64Utf8(enhancedCode);
-      interface GitHubPayload {
-        message: string;
-        content: string;
-        branch: string;
-        sha?: string;
-      }
-
-      const payload: GitHubPayload = {
-        message: "wisedroid created a file main.py",
-        content: base64Content,
-        branch: "main",
-      };
-
-      // Try to check if file exists, but handle the case where it doesn't
-      try {
-        const checkExistingFile = await axios.get(
-          `https://api.github.com/repos/${repoUrl}/contents/main.py`,
-          options
-        );
-        if (
-          checkExistingFile.status === 200 &&
-          checkExistingFile.data &&
-          checkExistingFile.data.sha
-        ) {
-          payload.sha = checkExistingFile.data.sha;
-        }
-      } catch (fileError) {
-        // File doesn't exist, which is fine - we'll create it
-        console.log("File does not exist yet, will create new one");
-      }
-
-      // Create or update the file
-      const response = await axios.put(
-        `https://api.github.com/repos/${repoUrl}/contents/main.py`,
-        payload,
-        options
-      );
-
-      if (!response || !response.data) {
-        throw new Error("Failed to create file");
-      }
-
-      console.log("File created successfully");
-      return response.data;
-    } catch (error) {
-      console.error("Error creating file:", error);
-      throw error; // Re-throw to allow calling function to handle the error
-    }
-  };
-
-  const checkGithubConnection = async () => {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get("code");
-
-      if (code) {
-        // Send code to backend
-        const url = import.meta.env.VITE_API || "http://localhost:5002/api/v1";
-        const response = await axios.post(`${url}/candidate/github-login`, {
-          code,
-        });
-        if (response.data.success) {
-          setIsConnected(true);
-          localStorage.setItem("githubToken", response.data.data);
-        } else {
-          setIsConnected(false);
-        }
-        window.location.href = "/dashboard";
-      }
-    } catch (error) {
-      console.error("Error during GitHub login:", error);
-      setIsConnected(false);
-    }
-  };
-
   useEffect(() => {
-    const token = localStorage.getItem("githubToken");
-    if (token) {
-      setIsConnected(true);
-    } else {
-      setIsConnected(false);
-      checkGithubConnection();
-    }
+    // No GitHub connection logic to remove
   }, []);
 
   if (loading || isChecking) {
@@ -326,17 +251,6 @@ export function AgentsList() {
         <h2 className="text-2xl font-bold text-gray-900">Your AI Agents</h2>
         <div className="flex items-center gap-4">
           <button
-            onClick={loginWithGitHub}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-md ${
-              isConnected
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-            }`}
-          >
-            <Github className="h-5 w-5" />{" "}
-            {isConnected ? "Disconnect GitHub" : "Connect GitHub"}
-          </button>
-          <button
             onClick={handleCreateAgent}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
           >
@@ -345,53 +259,6 @@ export function AgentsList() {
           </button>
         </div>
       </div>
-
-      {showGitHubError && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-5 w-5 text-red-400"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">
-                Please connect your GitHub account to create an agent. This is
-                required for deployment.
-              </p>
-            </div>
-            <div className="ml-auto pl-3">
-              <div className="-mx-1.5 -my-1.5">
-                <button
-                  onClick={() => setShowGitHubError(false)}
-                  className="inline-flex rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none"
-                >
-                  <span className="sr-only">Dismiss</span>
-                  <svg
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {!hasReachedLimit && remainingAgents > 0 && (
         <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
@@ -434,7 +301,7 @@ export function AgentsList() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {agents.map((agent) => (
             <AgentCard
               key={agent.id}
@@ -451,11 +318,13 @@ export function AgentsList() {
                 code: agent.code || undefined,
                 build_command: (agent as any).build_command || 'npm run build',
                 start_command: (agent as any).start_command || 'npm start',
+                url: (agent as any).url || undefined, // Pass url to AgentCard
               }}
               onDelete={handleDelete}
               onEdit={handleEdit}
               onAnalytics={handleAnalytics}
               onDeploy={handleDeploy}
+              onReDeploy={handleReDeploy}
               onTogglePublic={handleTogglePublic}
               isLoading={loadingAgents.get(agent.id) || false}
               deploymentStatus={getDeploymentStatus(agent)}

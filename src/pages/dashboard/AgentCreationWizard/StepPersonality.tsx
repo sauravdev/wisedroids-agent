@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 interface StepPersonalityProps {
-  traits: Record<string, number>;
-  setTraits: (traits: Record<string, number>) => void;
+  traits: string;
+  setTraits: (traits: string) => void;
   errors?: {
     personality?: string;
   };
@@ -13,20 +13,14 @@ export function StepPersonality({
   setTraits,
   errors,
 }: StepPersonalityProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(traits);
 
   // Initialize input value when component mounts or traits change
-  useEffect(() => {
-    const traitsText = Object.entries(traits)
-      .map(([trait, value]) => `${trait}: ${value}`)
-      .join("\n");
-    setInputValue(traitsText);
-  }, [traits]);
 
   const handleTraitsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-
+    setTraits(newValue)
     // // Only update traits when the input is valid
     // const lines = newValue.split('\n').filter(line => line.trim() !== '');
     // const newTraits: Record<string, number> = {};

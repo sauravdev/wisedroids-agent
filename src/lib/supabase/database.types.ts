@@ -15,9 +15,9 @@ export interface Database {
           user_id: string
           name: string
           description: string
-          capabilities: string[]
-          personality: Json
-          integrations: string[]
+          capabilities: string
+          personality: string
+          integrations: string
           is_public: boolean
           status: string
           api_key: string | null
@@ -26,6 +26,8 @@ export interface Database {
           code: string | null
           service_id: string | null
           repo_url: string | null
+          url: string | null
+          app_id: string | null
           created_at: string
           updated_at: string
         }
@@ -34,9 +36,9 @@ export interface Database {
           user_id: string
           name: string
           description: string
-          capabilities: string[]
-          personality: Json
-          integrations: string[]
+          capabilities: string
+          personality: string
+          integrations: string
           is_public?: boolean
           status?: string
           api_key?: string | null
@@ -44,6 +46,9 @@ export interface Database {
           metrics?: Json
           code?: string | null
           service_id?: string | null
+          repo_url?: string | null
+          url?: string | null
+          app_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -52,9 +57,9 @@ export interface Database {
           user_id?: string
           name?: string
           description?: string
-          capabilities?: string[]
-          personality?: Json
-          integrations?: string[]
+          capabilities?: string
+          personality?: string
+          integrations?: string
           is_public?: boolean
           status?: string
           api_key?: string | null
@@ -62,6 +67,9 @@ export interface Database {
           metrics?: Json
           code?: string | null
           service_id?: string | null
+          repo_url?: string | null
+          url?: string | null
+          app_id?: string | null
           created_at?: string
           updated_at?: string
         }

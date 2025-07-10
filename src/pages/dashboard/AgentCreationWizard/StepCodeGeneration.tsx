@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Wand2, Play } from "lucide-react";
-import { generateAgentCode, enhanceCode } from "@/lib/openai/client";
+import { RefreshCw, Wand2, Play, FileCode } from "lucide-react";
+import { generateAgentCode, enhanceCode, convertCodeToWebAPP } from "@/lib/openai/client";
 // import { executeCode } from '@/lib/code/executor';
 // import { initializePyodide, getInstallationStatus } from '@/lib/pyodide/interpreter';
 import axios from "axios";
@@ -33,6 +33,7 @@ export function StepCodeGeneration({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isGeneratingStreamlit, setIsGeneratingStreamlit] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enhancementPrompt, setEnhancementPrompt] = useState("");
   const [isPyodideReady, setIsPyodideReady] = useState(false);
@@ -88,12 +89,8 @@ export function StepCodeGeneration({
         agentPersonality,
         agentName
       );
-      if (code.success) {
-        setGeneratedCode(code.data);
-        onSaveCode(code.data);
-      } else {
-        setError(code.message.error);
-      }
+      setGeneratedCode(code);
+      onSaveCode(code);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate code");
     } finally {
@@ -151,6 +148,26 @@ export function StepCodeGeneration({
     }
   };
 
+  const handleGenerateStreamlitCode = async () => {
+    if (!generatedCode.trim()) {
+      setError("No code to convert. Please generate or enter code first.");
+      return;
+    }
+
+    setIsGeneratingStreamlit(true);
+    setError(null);
+
+    try {
+      const streamlitCode = await convertCodeToWebAPP(generatedCode);
+      setGeneratedCode(streamlitCode);
+      onSaveCode(streamlitCode);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate Streamlit code");
+    } finally {
+      setIsGeneratingStreamlit(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -171,6 +188,23 @@ export function StepCodeGeneration({
                 <>
                   <Wand2 className="w-4 h-4 mr-2" />
                   Generate Code
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleGenerateStreamlitCode}
+              disabled={isGeneratingStreamlit}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isGeneratingStreamlit ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Generating Streamlit...
+                </>
+              ) : (
+                <>
+                  <FileCode className="w-4 h-4 mr-2" />
+                  Generate Streamlit Code
                 </>
               )}
             </button>

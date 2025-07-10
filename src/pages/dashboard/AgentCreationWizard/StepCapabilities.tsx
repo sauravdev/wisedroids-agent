@@ -1,7 +1,7 @@
 import React from "react";
 
 interface StepCapabilitiesProps {
-  selectedCapabilities: string[];
+  selectedCapabilities: string;
   setSelectedCapabilities: (capabilities: string) => void;
   errors?: {
     capabilities?: string;
