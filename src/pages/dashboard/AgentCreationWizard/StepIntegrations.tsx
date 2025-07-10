@@ -25,7 +25,7 @@ export function StepIntegrations({ selectedIntegrations, setSelectedIntegrations
         </label>
         <textarea
           id="integrations"
-          value={selectedIntegrations.join('\n')}
+          value={selectedIntegrations}
           onChange={handleIntegrationsChange}
           rows={6}
           placeholder="Example:
