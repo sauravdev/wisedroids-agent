@@ -37,7 +37,16 @@ export function StepCodeGeneration({
   const [error, setError] = useState<string | null>(null);
   const [enhancementPrompt, setEnhancementPrompt] = useState("");
   const [isPyodideReady, setIsPyodideReady] = useState(false);
+  const [executionSuccess, setExecutionSuccess] = useState(false);
   // const [installationStatus, setInstallationStatus] = useState(getInstallationStatus());
+
+  // Reset execution success when code changes from props
+  useEffect(() => {
+    if (code !== generatedCode) {
+      setGeneratedCode(code);
+      setExecutionSuccess(false);
+    }
+  }, [code]);
 
   // Initialize Pyodide when component mounts
   // useEffect(() => {
@@ -80,6 +89,7 @@ export function StepCodeGeneration({
     setIsGenerating(true);
     setError(null);
     setOutput("");
+    setExecutionSuccess(false);
 
     try {
       const code = await generateAgentCode(
@@ -107,6 +117,7 @@ export function StepCodeGeneration({
     setIsExecuting(true);
     setError(null);
     setOutput("");
+    setExecutionSuccess(false);
 
     try {
       const response = await axios.post(
@@ -117,11 +128,14 @@ export function StepCodeGeneration({
       );
       if (response.data.output) {
         setOutput(response.data.output || "No output");
+        setExecutionSuccess(true);
       } else {
         setError(response.data.error);
+        setExecutionSuccess(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to execute code");
+      setExecutionSuccess(false);
     } finally {
       setIsExecuting(false);
     }
@@ -141,6 +155,7 @@ export function StepCodeGeneration({
       setGeneratedCode(enhanced);
       onSaveCode(enhanced);
       setEnhancementPrompt("");
+      setExecutionSuccess(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to enhance code");
     } finally {
@@ -172,7 +187,12 @@ export function StepCodeGeneration({
     <div className="space-y-6">
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-medium text-gray-900">Agent Code</h3>
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Agent Code</h3>
+            {executionSuccess && (
+              <p className="text-sm text-green-600 mt-1">✓ Code executed successfully - Streamlit generation available</p>
+            )}
+          </div>
           <div className="flex gap-2">
             <button
               onClick={handleGenerateCode}
@@ -193,8 +213,9 @@ export function StepCodeGeneration({
             </button>
             <button
               onClick={handleGenerateStreamlitCode}
-              disabled={isGeneratingStreamlit}
+              disabled={isGeneratingStreamlit || !executionSuccess}
               className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              title={!executionSuccess ? "Execute code successfully first to enable Streamlit generation" : ""}
             >
               {isGeneratingStreamlit ? (
                 <>
@@ -234,6 +255,7 @@ export function StepCodeGeneration({
             onChange={(e) => {
               setGeneratedCode(e.target.value);
               onSaveCode(e.target.value);
+              setExecutionSuccess(false);
             }}
             rows={15}
             className={`w-full font-mono text-sm rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 ${
