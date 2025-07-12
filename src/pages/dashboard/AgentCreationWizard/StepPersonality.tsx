@@ -20,7 +20,7 @@ export function StepPersonality({
   const handleTraitsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setInputValue(newValue);
-    setTraits(newValue)
+    setTraits(newValue);
     // // Only update traits when the input is valid
     // const lines = newValue.split('\n').filter(line => line.trim() !== '');
     // const newTraits: Record<string, number> = {};
@@ -51,7 +51,7 @@ export function StepPersonality({
           htmlFor="personality"
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Personality Traits
+          Security and Guardrails
         </label>
         <textarea
           id="personality"
