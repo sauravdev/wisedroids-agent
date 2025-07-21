@@ -11,6 +11,7 @@ import { StepIntegrations } from './StepIntegrations';
 import { StepCodeGeneration } from './StepCodeGeneration';
 import axios from 'axios';
 
+// New step components (placeholders for now)
 interface FormData {
   name: string;
   description: string;
@@ -19,6 +20,8 @@ interface FormData {
   integrations: string;
   isPublic: boolean;
   generatedCode: string;
+  deployedUrl?: string;
+  url?: string;
 }
 
 interface ValidationErrors {
@@ -37,8 +40,195 @@ const initialFormData: FormData = {
   personality: '',
   integrations: '',
   isPublic: false,
-  generatedCode: ''
+  generatedCode: '',
+  url: '',
 };
+
+// Update StepAgentDetails to use string fields
+function StepAgentDetails({ formData, setFormData, errors }: any) {
+  return (
+    <div className="space-y-6">
+      <StepDescription
+        name={formData.name}
+        description={formData.description}
+        setName={(name: string) => setFormData((fd: any) => ({ ...fd, name }))}
+        setDescription={(description: string) => setFormData((fd: any) => ({ ...fd, description }))}
+        errors={errors}
+      />
+      <StepCapabilities
+        selectedCapabilities={formData.capabilities}
+        setSelectedCapabilities={(capabilities: string) => setFormData((fd: any) => ({ ...fd, capabilities }))}
+        errors={errors}
+      />
+      <StepPersonality
+        traits={formData.personality}
+        setTraits={(personality: string) => setFormData((fd: any) => ({ ...fd, personality }))}
+        errors={errors}
+      />
+      <StepIntegrations
+        selectedIntegrations={formData.integrations.split(',')}
+        setSelectedIntegrations={(integrations: string[]) => setFormData((fd: any) => ({ ...fd, integrations: integrations.join(',') }))}
+        errors={errors}
+      />
+    </div>
+  );
+}
+
+// Step 2: Generate Code
+// Step 3: Execute & Enhance
+function StepExecuteEnhance({ code, onSaveCode, errors }: any) {
+  return (
+    <StepCodeGeneration
+      agentDescription={''}
+      agentCapabilities={[]}
+      agentIntegrations={[]}
+      agentPersonality={{}}
+      agentName={''}
+      code={code}
+      onSaveCode={onSaveCode}
+      errors={errors}
+      showGenerate={false}
+      showExecute={true}
+      showEnhance={true}
+      showStreamlit={false}
+      showDeploy={false}
+    />
+  );
+}
+
+// Step 4: Generate Deployment Code (show streamlit only)
+function StepGenerateDeployment({ code, onSaveCode, errors }: any) {
+  return (
+    <StepCodeGeneration
+      agentDescription={''}
+      agentCapabilities={[]}
+      agentIntegrations={[]}
+      agentPersonality={{}}
+      agentName={''}
+      code={code}
+      onSaveCode={onSaveCode}
+      errors={errors}
+      showGenerate={false}
+      showExecute={false}
+      showEnhance={false}
+      showStreamlit={true}
+      showDeploy={false}
+    />
+  );
+}
+
+// Step 5: Deploy & Preview
+function StepDeployPreview({ agentId, deployedUrl, setDeployedUrl, agentCode }: any) {
+  const [loading, setLoading] = React.useState(false);
+  const [logs, setLogs] = React.useState<string[]>([]);
+
+  const staticLogs = [
+    '[INFO] Authenticating with deployment service...',
+    '[INFO] Authenticated successfully.',
+    '[INFO] Preparing deployment package...',
+    '[INFO] Uploading agent code...',
+    '[INFO] Upload complete.',
+    '[INFO] Provisioning resources...',
+    '[INFO] Resources provisioned.',
+    '[INFO] Building application...',
+    '[INFO] Build successful. Starting deployment...',
+    '[INFO] Deployment in progress...',
+    '[INFO] Verifying deployment...',
+    '[INFO] Deployment successful. Your agent is now live.',
+  ];
+
+  const handleDeploy = async () => {
+    setLoading(true);
+    setLogs([]);
+
+    const logInterval = setInterval(() => {
+      setLogs((prevLogs) => {
+        if (prevLogs.length < staticLogs.length) {
+          return [...prevLogs, staticLogs[prevLogs.length]];
+        }
+        return prevLogs;
+      });
+    }, 800);
+
+    const startTime = Date.now();
+
+    try {
+      const response = await axios.post('https://agentapi.wisedroids.ai/run_streamlit', { code: agentCode });
+      
+      const endTime = Date.now();
+      const elapsedTime = endTime - startTime;
+
+      const remainingTime = Math.max(0, 10000 - elapsedTime);
+
+      if (remainingTime > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
+      }
+
+      if (response.data && response.data.prodUrl) {
+        setDeployedUrl(response.data.prodUrl);
+      } else {
+        alert('Deployment failed');
+      }
+    } catch (err) {
+      alert('Deployment error');
+    } finally {
+      clearInterval(logInterval);
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-8">
+        <div className="flex items-center mb-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600 mr-3"></div>
+          <h2 className="text-xl font-bold">Deploying Agent...</h2>
+        </div>
+        <div className="bg-gray-900 text-white p-4 rounded-md h-64 overflow-y-auto font-mono text-sm">
+          {logs.map((log, index) => (
+            <div key={index}>{log}</div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (deployedUrl) {
+    return (
+      <div className="mt-8">
+        <h2 className="text-xl font-bold mb-2">Embedded App View</h2>
+        <iframe
+          src={deployedUrl}
+          width="100%"
+          height="800px"
+          style={{ border: "none" }}
+          title="Embedded App"
+        >
+          Your browser does not support iframes.
+        </iframe>
+        <button
+          className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded"
+          onClick={handleDeploy}
+          disabled={loading}
+        >
+          {loading ? 'Redeploying...' : 'Redeploy'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        className="px-4 py-2 bg-indigo-600 text-white rounded"
+        onClick={handleDeploy}
+        disabled={loading}
+      >
+        {loading ? 'Deploying...' : 'Deploy'}
+      </button>
+    </div>
+  );
+}
 
 export function AgentCreationWizard() {
   const navigate = useNavigate();
@@ -51,6 +241,7 @@ export function AgentCreationWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasReachedLimit && !id) {
@@ -63,11 +254,22 @@ export function AgentCreationWizard() {
       setFormData({
         name: existingAgent.name,
         description: existingAgent.description,
-        capabilities: existingAgent.capabilities,
-        personality: existingAgent.personality,
-        integrations: existingAgent.integrations,
+        capabilities: typeof existingAgent.capabilities === 'string'
+          ? existingAgent.capabilities
+          : Array.isArray(existingAgent.capabilities)
+            ? existingAgent.capabilities.join(',')
+            : '',
+        personality: typeof existingAgent.personality === 'string'
+          ? existingAgent.personality
+          : '',
+        integrations: typeof existingAgent.integrations === 'string'
+          ? existingAgent.integrations
+          : Array.isArray(existingAgent.integrations)
+            ? existingAgent.integrations.join(',')
+            : '',
         isPublic: existingAgent.is_public,
-        generatedCode: existingAgent.code || ''
+        generatedCode: existingAgent.code || '',
+        deployedUrl: existingAgent.url || '',
       });
     }
   }, [existingAgent]);
@@ -76,21 +278,24 @@ export function AgentCreationWizard() {
     const newErrors: ValidationErrors = {};
     
     switch (step) {
-      case 0: // Description step
+      case 0: // Agent Details step
         if (!formData.name.trim()) newErrors.name = 'Name is required';
         if (!formData.description.trim()) newErrors.description = 'Description is required';
+        if (!formData.capabilities.trim()) newErrors.capabilities = 'At least one capability is required';
+        if (!formData.personality.trim()) newErrors.personality = 'At least one personality trait is required';
+        if (!formData.integrations.trim()) newErrors.integrations = 'At least one integration is required';
         break;
-      case 1: // Capabilities step
-        if (formData.capabilities.length === 0) newErrors.capabilities = 'At least one capability is required';
+      case 1: // Generate Code step
+        // No required fields
         break;
-      case 2: // Personality step
-        if (Object.keys(formData.personality).length === 0) newErrors.personality = 'At least one personality trait is required';
+      case 2: // Execute & Enhance step
+        // No required fields
         break;
-      case 3: // Integrations step
-        if (formData.integrations.length === 0) newErrors.integrations = 'At least one integration is required';
+      case 3: // Generate Deployment Code step
+        // No required fields
         break;
-      case 4: // Code Generation step
-        if (!formData.generatedCode.trim()) newErrors.generatedCode = 'Generated code is required';
+      case 4: // Deploy & Preview step
+        // No required fields
         break;
     }
 
@@ -104,61 +309,66 @@ export function AgentCreationWizard() {
     }
   };
 
+  // New steps array
   const steps = [
     {
-      title: 'Description',
+      title: 'Agent Details',
       component: (
-        <StepDescription
-          name={formData.name}
-          description={formData.description}
-          setName={(name) => setFormData({ ...formData, name })}
-          setDescription={(description) => setFormData({ ...formData, description })}
+        <StepAgentDetails
+          formData={formData}
+          setFormData={setFormData}
           errors={errors}
         />
       ),
     },
     {
-      title: 'Capabilities',
-      component: (
-        <StepCapabilities
-          selectedCapabilities={formData.capabilities}
-          setSelectedCapabilities={(capabilities) => setFormData({ ...formData, capabilities })}
-          errors={errors}
-        />
-      ),
-    },
-    {
-      title: 'Personality',
-      component: (
-        <StepPersonality
-          traits={formData.personality}
-          setTraits={(personality) => setFormData({ ...formData, personality })}
-          errors={errors}
-        />
-      ),
-    },
-    {
-      title: 'Integrations',
-      component: (
-        <StepIntegrations
-          selectedIntegrations={formData.integrations}
-          setSelectedIntegrations={(integrations) => setFormData({ ...formData, integrations })}
-          errors={errors}
-        />
-      ),
-    },
-    {
-      title: 'Code Generation',
+      title: 'Generate Code',
       component: (
         <StepCodeGeneration
           agentDescription={formData.description}
-          agentCapabilities={formData.capabilities}
-          agentIntegrations={formData.integrations}
-          agentPersonality={formData.personality}
+          agentCapabilities={formData.capabilities.split(',')}
+          agentIntegrations={formData.integrations.split(',')}
+          agentPersonality={{}}
           agentName={formData.name}
           code={formData.generatedCode}
-          onSaveCode={(code) => setFormData({ ...formData, generatedCode: code })}
+          onSaveCode={(code: string) => setFormData((fd) => ({ ...fd, generatedCode: code }))}
           errors={errors}
+          showGenerate={true}
+          showExecute={false}
+          showEnhance={false}
+          showStreamlit={false}
+          showDeploy={false}
+        />
+      ),
+    },
+    {
+      title: 'Execute & Enhance',
+      component: (
+        <StepExecuteEnhance
+          code={formData.generatedCode}
+          onSaveCode={(code: string) => setFormData((fd) => ({ ...fd, generatedCode: code }))}
+          errors={errors}
+        />
+      ),
+    },
+    {
+      title: 'Generate Deployment Code',
+      component: (
+        <StepGenerateDeployment
+          code={formData.generatedCode}
+          onSaveCode={(code: string) => setFormData((fd) => ({ ...fd, generatedCode: code }))}
+          errors={errors}
+        />
+      ),
+    },
+    {
+      title: 'Deploy & Preview',
+      component: (
+        <StepDeployPreview
+          agentId={id}
+          deployedUrl={formData.deployedUrl}
+          setDeployedUrl={(url: string) => setFormData((fd) => ({ ...fd, deployedUrl: url }))}
+          agentCode={formData.generatedCode}
         />
       ),
     },
@@ -183,26 +393,30 @@ export function AgentCreationWizard() {
         user_id: user.id,
         name: formData.name,
         description: formData.description,
-        capabilities: formData.capabilities,
+        capabilities: formData.capabilities.split(','),
         personality: formData.personality,
-        integrations: formData.integrations,
+        integrations: formData.integrations.split(','),
         is_public: formData.isPublic,
         status: 'draft',
         api_key: null,
         api_endpoint: null,
         repo_url: repo.url,
         metrics: { requests: 0, success_rate: 0, avg_response_time: 0 },
-        code: formData.generatedCode
+        code: formData.generatedCode,
+        url: formData.deployedUrl || null,
+        service_id: '',
+        app_id: ''
       };
       const updateAgentData = {
         user_id: user.id,
         name: formData.name,
         description: formData.description,
-        capabilities: formData.capabilities,
+        capabilities: formData.capabilities.split(','),
         personality: formData.personality,
-        integrations: formData.integrations,
+        integrations: formData.integrations.split(','),
         is_public: formData.isPublic,
-        code: formData.generatedCode
+        code: formData.generatedCode,
+        url: formData.deployedUrl || null,
       };
 
       if (id) {

@@ -15,9 +15,9 @@ export interface Database {
           user_id: string
           name: string
           description: string
-          capabilities: string
+          capabilities: string[]
           personality: string
-          integrations: string
+          integrations: string[]
           is_public: boolean
           status: string
           api_key: string | null
@@ -36,9 +36,9 @@ export interface Database {
           user_id: string
           name: string
           description: string
-          capabilities: string
+          capabilities: string[]
           personality: string
-          integrations: string
+          integrations: string[]
           is_public?: boolean
           status?: string
           api_key?: string | null
@@ -57,9 +57,9 @@ export interface Database {
           user_id?: string
           name?: string
           description?: string
-          capabilities?: string
+          capabilities?: string[]
           personality?: string
-          integrations?: string
+          integrations?: string[]
           is_public?: boolean
           status?: string
           api_key?: string | null

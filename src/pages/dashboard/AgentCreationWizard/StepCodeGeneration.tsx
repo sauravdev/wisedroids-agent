@@ -16,6 +16,13 @@ interface StepCodeGenerationProps {
   errors?: {
     generatedCode?: string;
   };
+  showGenerate?: boolean;
+  showExecute?: boolean;
+  showEnhance?: boolean;
+  showStreamlit?: boolean;
+  showDeploy?: boolean;
+  onDeploy?: () => void;
+  isDeployed?: boolean;
 }
 
 export function StepCodeGeneration({
@@ -27,6 +34,13 @@ export function StepCodeGeneration({
   code,
   onSaveCode,
   errors,
+  showGenerate = true,
+  showExecute = true,
+  showEnhance = true,
+  showStreamlit = true,
+  showDeploy = false,
+  onDeploy,
+  isDeployed
 }: StepCodeGenerationProps) {
   const [generatedCode, setGeneratedCode] = useState(code);
   const [output, setOutput] = useState("");
@@ -194,58 +208,91 @@ export function StepCodeGeneration({
             )}
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={handleGenerateCode}
-              disabled={isGenerating}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {isGenerating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  Generate Code
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleGenerateStreamlitCode}
-              disabled={isGeneratingStreamlit || !executionSuccess}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-              title={!executionSuccess ? "Execute code successfully first to enable Streamlit generation" : ""}
-            >
-              {isGeneratingStreamlit ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Streamlit...
-                </>
-              ) : (
-                <>
-                  <FileCode className="w-4 h-4 mr-2" />
-                  Generate Streamlit Code
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleExecuteCode}
-              disabled={isExecuting}
-              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-            >
-              {isExecuting ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Executing...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Execute Code
-                </>
-              )}
-            </button>
+            {showGenerate && (
+              <button
+                onClick={handleGenerateCode}
+                disabled={isGenerating}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Generate Code
+                  </>
+                )}
+              </button>
+            )}
+            {showStreamlit && (
+              <button
+                onClick={handleGenerateStreamlitCode}
+                disabled={isGeneratingStreamlit}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                title={!executionSuccess ? "Execute code successfully first to enable Streamlit generation" : ""}
+              >
+                {isGeneratingStreamlit ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Generating Streamlit...
+                  </>
+                ) : (
+                  <>
+                    <FileCode className="w-4 h-4 mr-2" />
+                    Generate Streamlit Code
+                  </>
+                )}
+              </button>
+            )}
+            {showExecute && (
+              <button
+                onClick={handleExecuteCode}
+                disabled={isExecuting}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+              >
+                {isExecuting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Executing...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Execute Code
+                  </>
+                )}
+              </button>
+            )}
+            {showEnhance && (
+              <button
+                onClick={handleEnhanceCode}
+                disabled={isEnhancing}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+              >
+                {isEnhancing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Enhancing...
+                  </>
+                ) : (
+                  <>
+                    <Wand2 className="w-4 h-4 mr-2" />
+                    Enhance Code
+                  </>
+                )}
+              </button>
+            )}
+            {showDeploy && onDeploy && (
+              <button
+                onClick={onDeploy}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-700 hover:bg-indigo-800 disabled:opacity-50"
+              >
+                {isDeployed ? 'Redeploy' : 'Deploy'}
+              </button>
+            )}
           </div>
         </div>
 
