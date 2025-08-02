@@ -37,7 +37,7 @@ export function StepCodeGeneration({
   showGenerate = true,
   showExecute = true,
   showEnhance = true,
-  showStreamlit = true,
+  showStreamlit = false,
   showDeploy = false,
   onDeploy,
   isDeployed
@@ -204,7 +204,7 @@ export function StepCodeGeneration({
           <div>
             <h3 className="text-lg font-medium text-gray-900">Agent Code</h3>
             {executionSuccess && (
-              <p className="text-sm text-green-600 mt-1">✓ Code executed successfully - Streamlit generation available</p>
+              <p className="text-sm text-green-600 mt-1">✓ Code executed successfully - Ready for Streamlit generation</p>
             )}
           </div>
           <div className="flex gap-2">
@@ -223,26 +223,6 @@ export function StepCodeGeneration({
                   <>
                     <Wand2 className="w-4 h-4 mr-2" />
                     Generate Code
-                  </>
-                )}
-              </button>
-            )}
-            {showStreamlit && (
-              <button
-                onClick={handleGenerateStreamlitCode}
-                disabled={isGeneratingStreamlit}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                title={!executionSuccess ? "Execute code successfully first to enable Streamlit generation" : ""}
-              >
-                {isGeneratingStreamlit ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                    Generating Streamlit...
-                  </>
-                ) : (
-                  <>
-                    <FileCode className="w-4 h-4 mr-2" />
-                    Generate Streamlit Code
                   </>
                 )}
               </button>
@@ -334,39 +314,24 @@ export function StepCodeGeneration({
           </div>
         )}
 
-        <div className="space-y-2">
-          <label
-            htmlFor="enhancement"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Enhancement Instructions
-          </label>
-          <textarea
-            id="enhancement"
-            value={enhancementPrompt}
-            onChange={(e) => setEnhancementPrompt(e.target.value)}
-            rows={3}
-            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="Describe how you want to enhance the code..."
-          />
-          <button
-            onClick={handleEnhanceCode}
-            disabled={isEnhancing}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
-          >
-            {isEnhancing ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Enhancing...
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4 mr-2" />
-                Enhance Code
-              </>
-            )}
-          </button>
-        </div>
+        {showEnhance && (
+          <div className="space-y-2">
+            <label
+              htmlFor="enhancement"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Enhancement Instructions
+            </label>
+            <textarea
+              id="enhancement"
+              value={enhancementPrompt}
+              onChange={(e) => setEnhancementPrompt(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              placeholder="Describe how you want to enhance the code..."
+            />
+          </div>
+        )}
       </div>
     </div>
   );

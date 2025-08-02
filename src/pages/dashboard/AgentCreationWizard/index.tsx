@@ -9,7 +9,9 @@ import { StepCapabilities } from './StepCapabilities';
 import { StepPersonality } from './StepPersonality';
 import { StepIntegrations } from './StepIntegrations';
 import { StepCodeGeneration } from './StepCodeGeneration';
+import { convertCodeToWebAPP } from '@/lib/openai/client';
 import axios from 'axios';
+import { RefreshCw, FileCode } from 'lucide-react';
 
 // New step components (placeholders for now)
 interface FormData {
@@ -74,20 +76,19 @@ function StepAgentDetails({ formData, setFormData, errors }: any) {
   );
 }
 
-// Step 2: Generate Code
-// Step 3: Execute & Enhance
-function StepExecuteEnhance({ code, onSaveCode, errors }: any) {
+// Step 2: Generate, Execute & Enhance Code (Combined)
+function StepGenerateExecuteEnhance({ formData, setFormData, errors }: any) {
   return (
     <StepCodeGeneration
-      agentDescription={''}
-      agentCapabilities={[]}
-      agentIntegrations={[]}
+      agentDescription={formData.description}
+      agentCapabilities={formData.capabilities.split(',')}
+      agentIntegrations={formData.integrations.split(',')}
       agentPersonality={{}}
-      agentName={''}
-      code={code}
-      onSaveCode={onSaveCode}
+      agentName={formData.name}
+      code={formData.generatedCode}
+      onSaveCode={(code: string) => setFormData((fd: FormData) => ({ ...fd, generatedCode: code }))}
       errors={errors}
-      showGenerate={false}
+      showGenerate={true}
       showExecute={true}
       showEnhance={true}
       showStreamlit={false}
@@ -96,28 +97,88 @@ function StepExecuteEnhance({ code, onSaveCode, errors }: any) {
   );
 }
 
-// Step 4: Generate Deployment Code (show streamlit only)
-function StepGenerateDeployment({ code, onSaveCode, errors }: any) {
+// Step 3: Generate Streamlit Code
+function StepStreamlitCode({ formData, setFormData, errors }: any) {
+  const [isGeneratingStreamlit, setIsGeneratingStreamlit] = useState(false);
+  const [executionSuccess, setExecutionSuccess] = useState(false);
+
+  // Check if the main code has been executed successfully
+  useEffect(() => {
+    // This would need to be passed from the previous step or stored in formData
+    // For now, we'll assume it's successful if there's code
+    setExecutionSuccess(!!formData.generatedCode);
+  }, [formData.generatedCode]);
+
+  const handleGenerateStreamlitCode = async () => {
+    if (!formData.generatedCode.trim()) {
+      alert("Please generate and execute the main code first.");
+      return;
+    }
+
+    setIsGeneratingStreamlit(true);
+    try {
+      const streamlitCode = await convertCodeToWebAPP(formData.generatedCode);
+      setFormData((fd: FormData) => ({ ...fd, generatedCode: streamlitCode }));
+    } catch (err) {
+      alert('Failed to generate Streamlit code');
+    } finally {
+      setIsGeneratingStreamlit(false);
+    }
+  };
+
   return (
-    <StepCodeGeneration
-      agentDescription={''}
-      agentCapabilities={[]}
-      agentIntegrations={[]}
-      agentPersonality={{}}
-      agentName={''}
-      code={code}
-      onSaveCode={onSaveCode}
-      errors={errors}
-      showGenerate={false}
-      showExecute={false}
-      showEnhance={false}
-      showStreamlit={true}
-      showDeploy={false}
-    />
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Streamlit Deployment Code</h3>
+            <p className="text-sm text-gray-600 mt-1">Generate Streamlit code for web deployment</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleGenerateStreamlitCode}
+              disabled={isGeneratingStreamlit || !executionSuccess}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              title={!executionSuccess ? "Execute code successfully first to enable Streamlit generation" : ""}
+            >
+              {isGeneratingStreamlit ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Generating Streamlit...
+                </>
+              ) : (
+                <>
+                  <FileCode className="w-4 h-4 mr-2" />
+                  Generate Streamlit Code
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="relative">
+          <textarea
+            value={formData.generatedCode}
+            onChange={(e) => setFormData((fd: FormData) => ({ ...fd, generatedCode: e.target.value }))}
+            rows={15}
+            className="w-full font-mono text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            placeholder="Streamlit code will appear here after generation..."
+          />
+        </div>
+
+        {!executionSuccess && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Please execute the main code successfully first to enable Streamlit generation.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
-// Step 5: Deploy & Preview
+// Step 4: Deploy & Preview
 function StepDeployPreview({ agentId, deployedUrl, setDeployedUrl, agentCode }: any) {
   const [loading, setLoading] = React.useState(false);
   const [logs, setLogs] = React.useState<string[]>([]);
@@ -322,41 +383,21 @@ export function AgentCreationWizard() {
       ),
     },
     {
-      title: 'Generate Code',
+      title: 'Generate & Execute Code',
       component: (
-        <StepCodeGeneration
-          agentDescription={formData.description}
-          agentCapabilities={formData.capabilities.split(',')}
-          agentIntegrations={formData.integrations.split(',')}
-          agentPersonality={{}}
-          agentName={formData.name}
-          code={formData.generatedCode}
-          onSaveCode={(code: string) => setFormData((fd) => ({ ...fd, generatedCode: code }))}
-          errors={errors}
-          showGenerate={true}
-          showExecute={false}
-          showEnhance={false}
-          showStreamlit={false}
-          showDeploy={false}
-        />
-      ),
-    },
-    {
-      title: 'Execute & Enhance',
-      component: (
-        <StepExecuteEnhance
-          code={formData.generatedCode}
-          onSaveCode={(code: string) => setFormData((fd) => ({ ...fd, generatedCode: code }))}
+        <StepGenerateExecuteEnhance
+          formData={formData}
+          setFormData={setFormData}
           errors={errors}
         />
       ),
     },
     {
-      title: 'Generate Deployment Code',
+      title: 'Generate Streamlit Code',
       component: (
-        <StepGenerateDeployment
-          code={formData.generatedCode}
-          onSaveCode={(code: string) => setFormData((fd) => ({ ...fd, generatedCode: code }))}
+        <StepStreamlitCode
+          formData={formData}
+          setFormData={setFormData}
           errors={errors}
         />
       ),
