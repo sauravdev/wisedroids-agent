@@ -1,75 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main pages -->
   <url>
-    <loc>https://wisedroids.com/</loc>
+    <loc>https://wisedroids.ai/</loc>
+    <lastmod>2025-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://wisedroids.com/about</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://wisedroids.ai/features</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://wisedroids.ai/pricing</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://wisedroids.ai/agent-hub</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://wisedroids.com/contact</loc>
+    <loc>https://wisedroids.ai/create-agent</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://wisedroids.ai/about</loc>
+    <lastmod>2025-08-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  
-  <!-- Product pages - high priority -->
   <url>
-    <loc>https://wisedroids.com/agent-hub</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://wisedroids.com/features</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://wisedroids.com/how-it-works</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://wisedroids.com/use-cases</loc>
-    <changefreq>biweekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://wisedroids.com/pricing</loc>
+    <loc>https://wisedroids.ai/contact</loc>
+    <lastmod>2025-08-08</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <!-- Content & resource pages -->
-  <url>
-    <loc>https://wisedroids.com/blog</loc>
-    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://wisedroids.com/docs</loc>
+    <loc>https://wisedroids.ai/blog</loc>
+    <lastmod>2025-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
-  
-  <!-- Legal pages - lower priority but important for trust -->
   <url>
-    <loc>https://wisedroids.com/privacy</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://wisedroids.ai/docs</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://wisedroids.ai/privacy</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://wisedroids.com/terms</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://wisedroids.ai/terms</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://wisedroids.com/cookies</loc>
-    <changefreq>monthly</changefreq>
+    <loc>https://wisedroids.ai/cookies</loc>
+    <lastmod>2025-08-08</lastmod>
+    <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
 </urlset>

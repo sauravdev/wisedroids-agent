@@ -39,4 +39,4 @@ Allow: /*.svg$
 Allow: /*.webp$
 
 # Reference to sitemap
-Sitemap: https://www.wisedroids.com/sitemap.xml
+Sitemap: https://wisedroids.ai/sitemap.xml

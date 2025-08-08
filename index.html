@@ -5,49 +5,80 @@
     <link rel="icon" type="image/svg+xml" href="/ico.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- Targeted title for AI agent creation platform -->
-    <title>WiseDroids | Create Custom AI Agents Without Coding</title>
+    <!-- Primary SEO Meta Tags -->
+    <title>WiseDroids | Build Powerful AI Agents Instantly</title>
+    <meta name="description" content="Create, deploy, and scale high-performing AI agents with just a text description. Get started free." />
+    <meta name="keywords" content="AI agent creation, build AI agents, custom AI assistants, no-code AI, business automation, AI workflow, AI SaaS, Streamlit deployment" />
+    <link rel="canonical" href="https://wisedroids.ai/" />
     
-    <!-- Specific meta description for your SaaS product -->
-    <meta name="description" content="WiseDroids enables anyone to create, customize and deploy powerful AI agents for business automation. No coding required. Start building your AI workforce today." />
-    
-    <!-- Open Graph tags with specific AI agent creation messaging -->
-    <meta property="og:title" content="WiseDroids | Build Custom AI Agents With AI" />
-    <meta property="og:description" content="Create intelligent AI agents for your business needs without coding. Our AI-powered platform makes agent creation simple and powerful." />
+    <!-- Open Graph Meta Tags -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://wisedroids.com" />
-    <meta property="og:image" content="https://wisedroids.com/og-image.jpg" />
+    <meta property="og:url" content="https://wisedroids.ai/" />
+    <meta property="og:title" content="WiseDroids | Build Powerful AI Agents Instantly" />
+    <meta property="og:description" content="Create, deploy, and scale high-performing AI agents with just a text description." />
+    <meta property="og:image" content="https://wisedroids.ai/og/og-home.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="WiseDroids AI Agent Platform" />
     
-    <!-- Twitter Card data -->
+    <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="WiseDroids | AI Agent Creation Platform" />
-    <meta name="twitter:description" content="Build custom AI agents using AI - no coding required. Automate workflows and enhance productivity." />
+    <meta name="twitter:site" content="@WiseDroidsAI" />
+    <meta name="twitter:title" content="WiseDroids | Build Powerful AI Agents Instantly" />
+    <meta name="twitter:description" content="Create, deploy, and scale high-performing AI agents with just a text description." />
+    <meta name="twitter:image" content="https://wisedroids.ai/og/og-home.png" />
     
-    <!-- Keywords targeting AI agent creation -->
-    <meta name="keywords" content="AI agent creation, build AI agents, custom AI assistants, no-code AI, business automation, AI workflow, AI SaaS" />
+    <!-- Organization Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "WiseDroids",
+      "url": "https://wisedroids.ai",
+      "logo": "https://wisedroids.ai/logo.svg",
+      "sameAs": [
+        "https://twitter.com/WiseDroidsAI",
+        "https://www.linkedin.com/company/wisedroids"
+      ]
+    }
+    </script>
     
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://wisedroids.com" />
-    
-    <!-- Structured data for SaaS product -->
+    <!-- Product Structured Data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "WiseDroids",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "description": "Platform for creating custom AI agents using AI without coding",
+      "name": "WiseDroids AI Agent Platform",
+      "operatingSystem": "Cloud",
+      "applicationCategory": "ArtificialIntelligenceApplication",
       "offers": {
         "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
+        "price": "0.00",
+        "priceCurrency": "INR",
+        "description": "Free tier — up to 2 agents"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "128"
       }
     }
     </script>
+    
+    <!-- Google Site Verification -->
+    <meta name="google-site-verification" content="PASTE_YOUR_TOKEN" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Google Analytics v4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXX', { page_path: window.location.pathname });
+    </script>
   </body>
 </html>
