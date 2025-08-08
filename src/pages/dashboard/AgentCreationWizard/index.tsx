@@ -9,9 +9,9 @@ import { StepCapabilities } from './StepCapabilities';
 import { StepPersonality } from './StepPersonality';
 import { StepIntegrations } from './StepIntegrations';
 import { StepCodeGeneration } from './StepCodeGeneration';
-import { convertCodeToWebAPP } from '@/lib/openai/client';
+import { convertCodeToWebAPP, enhanceCode } from '@/lib/openai/client';
 import axios from 'axios';
-import { RefreshCw, FileCode } from 'lucide-react';
+import { RefreshCw, FileCode, Wand2 } from 'lucide-react';
 
 // New step components (placeholders for now)
 interface FormData {
@@ -100,13 +100,17 @@ function StepGenerateExecuteEnhance({ formData, setFormData, errors }: any) {
 // Step 3: Generate Streamlit Code
 function StepStreamlitCode({ formData, setFormData, errors }: any) {
   const [isGeneratingStreamlit, setIsGeneratingStreamlit] = useState(false);
+  const [isEnhancingStreamlit, setIsEnhancingStreamlit] = useState(false);
   const [executionSuccess, setExecutionSuccess] = useState(false);
+  const [streamlitCode, setStreamlitCode] = useState(formData.generatedCode);
+  const [streamlitEnhancementPrompt, setStreamlitEnhancementPrompt] = useState("");
 
   // Check if the main code has been executed successfully
   useEffect(() => {
     // This would need to be passed from the previous step or stored in formData
     // For now, we'll assume it's successful if there's code
     setExecutionSuccess(!!formData.generatedCode);
+    setStreamlitCode(formData.generatedCode);
   }, [formData.generatedCode]);
 
   const handleGenerateStreamlitCode = async () => {
@@ -117,12 +121,32 @@ function StepStreamlitCode({ formData, setFormData, errors }: any) {
 
     setIsGeneratingStreamlit(true);
     try {
-      const streamlitCode = await convertCodeToWebAPP(formData.generatedCode);
-      setFormData((fd: FormData) => ({ ...fd, generatedCode: streamlitCode }));
+      const newStreamlitCode = await convertCodeToWebAPP(formData.generatedCode);
+      setStreamlitCode(newStreamlitCode);
+      setFormData((fd: FormData) => ({ ...fd, generatedCode: newStreamlitCode }));
     } catch (err) {
       alert('Failed to generate Streamlit code');
     } finally {
       setIsGeneratingStreamlit(false);
+    }
+  };
+
+  const handleEnhanceStreamlitCode = async () => {
+    if (!streamlitCode.trim() || !streamlitEnhancementPrompt.trim()) {
+      alert("Please provide both Streamlit code and enhancement instructions.");
+      return;
+    }
+
+    setIsEnhancingStreamlit(true);
+    try {
+      const enhanced = await enhanceCode(streamlitCode, streamlitEnhancementPrompt);
+      setStreamlitCode(enhanced);
+      setFormData((fd: FormData) => ({ ...fd, generatedCode: enhanced }));
+      setStreamlitEnhancementPrompt("");
+    } catch (err) {
+      alert('Failed to enhance Streamlit code');
+    } finally {
+      setIsEnhancingStreamlit(false);
     }
   };
 
@@ -153,17 +177,63 @@ function StepStreamlitCode({ formData, setFormData, errors }: any) {
                 </>
               )}
             </button>
+            <button
+              onClick={handleEnhanceStreamlitCode}
+              disabled={isEnhancingStreamlit}
+              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+            >
+              {isEnhancingStreamlit ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Enhancing Streamlit...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Enhance Streamlit
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        <div className="relative">
-          <textarea
-            value={formData.generatedCode}
-            onChange={(e) => setFormData((fd: FormData) => ({ ...fd, generatedCode: e.target.value }))}
-            rows={15}
-            className="w-full font-mono text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-            placeholder="Streamlit code will appear here after generation..."
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label
+              htmlFor="streamlit-code"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Streamlit Code
+            </label>
+            <textarea
+              id="streamlit-code"
+              value={streamlitCode}
+              onChange={(e) => {
+                setStreamlitCode(e.target.value);
+                setFormData((fd: FormData) => ({ ...fd, generatedCode: e.target.value }));
+              }}
+              rows={15}
+              className="w-full font-mono text-sm rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 border-gray-300 focus:border-indigo-300"
+              placeholder="Streamlit code will appear here..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="streamlit-enhancement"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Streamlit Enhancement Instructions
+            </label>
+            <textarea
+              id="streamlit-enhancement"
+              value={streamlitEnhancementPrompt}
+              onChange={(e) => setStreamlitEnhancementPrompt(e.target.value)}
+              rows={3}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+              placeholder="Describe how you want to enhance the Streamlit code..."
+            />
+          </div>
         </div>
 
         {!executionSuccess && (
@@ -399,6 +469,7 @@ export function AgentCreationWizard() {
           formData={formData}
           setFormData={setFormData}
           errors={errors}
+          showEnhance={true}
         />
       ),
     },

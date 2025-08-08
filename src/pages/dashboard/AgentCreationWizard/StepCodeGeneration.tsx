@@ -48,16 +48,21 @@ export function StepCodeGeneration({
   const [isExecuting, setIsExecuting] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isGeneratingStreamlit, setIsGeneratingStreamlit] = useState(false);
+  const [isEnhancingStreamlit, setIsEnhancingStreamlit] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [enhancementPrompt, setEnhancementPrompt] = useState("");
+  const [streamlitEnhancementPrompt, setStreamlitEnhancementPrompt] = useState("");
+  const [streamlitCode, setStreamlitCode] = useState("");
   const [isPyodideReady, setIsPyodideReady] = useState(false);
   const [executionSuccess, setExecutionSuccess] = useState(false);
+  const [activeStreamlitTab, setActiveStreamlitTab] = useState<'code' | 'enhancement'>('code');
   // const [installationStatus, setInstallationStatus] = useState(getInstallationStatus());
 
   // Reset execution success when code changes from props
   useEffect(() => {
     if (code !== generatedCode) {
       setGeneratedCode(code);
+      setStreamlitCode(code);
       setExecutionSuccess(false);
     }
   }, [code]);
@@ -187,13 +192,37 @@ export function StepCodeGeneration({
     setError(null);
 
     try {
-      const streamlitCode = await convertCodeToWebAPP(generatedCode);
-      setGeneratedCode(streamlitCode);
-      onSaveCode(streamlitCode);
+      const newStreamlitCode = await convertCodeToWebAPP(generatedCode);
+      setStreamlitCode(newStreamlitCode);
+      setGeneratedCode(newStreamlitCode);
+      onSaveCode(newStreamlitCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate Streamlit code");
     } finally {
       setIsGeneratingStreamlit(false);
+    }
+  };
+
+  const handleEnhanceStreamlitCode = async () => {
+    if (!streamlitCode.trim() || !streamlitEnhancementPrompt.trim()) {
+      setError("Please provide both Streamlit code and enhancement instructions.");
+      return;
+    }
+
+    setIsEnhancingStreamlit(true);
+    setError(null);
+
+    try {
+      const enhanced = await enhanceCode(streamlitCode, streamlitEnhancementPrompt);
+      setStreamlitCode(enhanced);
+      setGeneratedCode(enhanced);
+      onSaveCode(enhanced);
+      setStreamlitEnhancementPrompt("");
+      setExecutionSuccess(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to enhance Streamlit code");
+    } finally {
+      setIsEnhancingStreamlit(false);
     }
   };
 
@@ -265,6 +294,44 @@ export function StepCodeGeneration({
                 )}
               </button>
             )}
+            {showStreamlit && (
+              <>
+                <button
+                  onClick={handleGenerateStreamlitCode}
+                  disabled={isGeneratingStreamlit}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isGeneratingStreamlit ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Generating Streamlit...
+                    </>
+                  ) : (
+                    <>
+                      <FileCode className="w-4 h-4 mr-2" />
+                      Generate Streamlit
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleEnhanceStreamlitCode}
+                  disabled={isEnhancingStreamlit}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+                >
+                  {isEnhancingStreamlit ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Enhancing Streamlit...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Enhance Streamlit
+                    </>
+                  )}
+                </button>
+              </>
+            )}
             {showDeploy && onDeploy && (
               <button
                 onClick={onDeploy}
@@ -330,6 +397,78 @@ export function StepCodeGeneration({
               className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               placeholder="Describe how you want to enhance the code..."
             />
+          </div>
+        )}
+
+        {showStreamlit && (
+          <div className="space-y-4">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveStreamlitTab('code')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeStreamlitTab === 'code'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Streamlit Code
+                </button>
+                <button
+                  onClick={() => setActiveStreamlitTab('enhancement')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeStreamlitTab === 'enhancement'
+                      ? 'border-indigo-500 text-indigo-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Enhancement Instructions
+                </button>
+              </nav>
+            </div>
+
+            {activeStreamlitTab === 'code' && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="streamlit-code"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Streamlit Code
+                </label>
+                <textarea
+                  id="streamlit-code"
+                  value={streamlitCode}
+                  onChange={(e) => {
+                    setStreamlitCode(e.target.value);
+                    setGeneratedCode(e.target.value);
+                    onSaveCode(e.target.value);
+                    setExecutionSuccess(false);
+                  }}
+                  rows={15}
+                  className="w-full font-mono text-sm rounded-md shadow-sm focus:ring-indigo-200 focus:ring-opacity-50 border-gray-300 focus:border-indigo-300"
+                  placeholder="Streamlit code will appear here..."
+                />
+              </div>
+            )}
+
+            {activeStreamlitTab === 'enhancement' && (
+              <div className="space-y-2">
+                <label
+                  htmlFor="streamlit-enhancement"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Streamlit Enhancement Instructions
+                </label>
+                <textarea
+                  id="streamlit-enhancement"
+                  value={streamlitEnhancementPrompt}
+                  onChange={(e) => setStreamlitEnhancementPrompt(e.target.value)}
+                  rows={15}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                  placeholder="Describe how you want to enhance the Streamlit code..."
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
