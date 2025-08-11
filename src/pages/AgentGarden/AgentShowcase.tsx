@@ -26,8 +26,12 @@ export function AgentShowcase() {
                 agent={agent}
                 onDelete={() => {}}
                 onDeploy={() => {}}
+                onReDeploy={() => {}}
                 onEdit={() => {}}
                 onAnalytics={() => {}}
+                onTogglePublic={() => {}}
+                isLoading={false}
+                deploymentStatus="deployed"
                 readOnly
               />
             ))}

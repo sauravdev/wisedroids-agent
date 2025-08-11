@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Clock, Play, AlertCircle, CheckCircle, Loader2, Code, Terminal } from 'lucide-react';
+import { Send, Clock, Play, AlertCircle, CheckCircle, Loader2, Code, Terminal, Copy, Check } from 'lucide-react';
 import { getAgentById } from '@/lib/supabase/agents';
 
 interface AgentTestInterfaceProps {
@@ -40,6 +40,7 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
     startTime: number;
     logs: string[];
   } | null>(null);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
 
   // Fetch agent data from Supabase
   useEffect(() => {
@@ -67,6 +68,16 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
         ...prev!,
         logs: [...prev!.logs, `${new Date().toLocaleTimeString()}: ${message}`]
       }));
+    }
+  };
+
+  const copyToClipboard = async (text: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedText(type);
+      setTimeout(() => setCopiedText(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
     }
   };
 
@@ -315,14 +326,40 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
 
                     {result.status === 'success' ? (
                       <div>
-                        <span className="text-xs font-medium text-gray-600">Output:</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-gray-600">Output:</span>
+                          <button
+                            onClick={() => copyToClipboard(result.output, `output-${result.id}`)}
+                            className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                            title="Copy output to clipboard"
+                          >
+                            {copiedText === `output-${result.id}` ? (
+                              <Check className="h-3 w-3" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </button>
+                        </div>
                         <pre className="text-sm bg-white rounded px-2 py-1 mt-1 whitespace-pre-wrap overflow-x-auto">
                           {result.output}
                         </pre>
                       </div>
                     ) : (
                       <div>
-                        <span className="text-xs font-medium text-gray-600">Error:</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-gray-600">Error:</span>
+                          <button
+                            onClick={() => copyToClipboard(result.error || '', `error-${result.id}`)}
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors"
+                            title="Copy error to clipboard"
+                          >
+                            {copiedText === `error-${result.id}` ? (
+                              <Check className="h-3 w-3" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </button>
+                        </div>
                         <p className="text-sm bg-white rounded px-2 py-1 mt-1 text-red-600">
                           {result.error}
                         </p>
@@ -334,10 +371,26 @@ export function AgentTestInterface({ agentId }: AgentTestInterfaceProps) {
                         <summary className="text-xs font-medium text-gray-600 cursor-pointer">
                           Execution Logs ({result.logs.length} entries)
                         </summary>
-                        <div className="mt-2 bg-gray-900 text-green-400 rounded px-2 py-1 text-xs font-mono max-h-20 overflow-y-auto">
-                          {result.logs.map((log, index) => (
-                            <div key={index}>{log}</div>
-                          ))}
+                        <div className="mt-2">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs text-gray-500">Logs:</span>
+                            <button
+                              onClick={() => copyToClipboard(result.logs?.join('\n') || '', `logs-${result.id}`)}
+                              className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                              title="Copy logs to clipboard"
+                            >
+                              {copiedText === `logs-${result.id}` ? (
+                                <Check className="h-3 w-3" />
+                              ) : (
+                                <Copy className="h-3 w-3" />
+                              )}
+                            </button>
+                          </div>
+                          <div className="bg-gray-900 text-green-400 rounded px-2 py-1 text-xs font-mono max-h-20 overflow-y-auto">
+                            {result.logs.map((log, index) => (
+                              <div key={index}>{log}</div>
+                            ))}
+                          </div>
                         </div>
                       </details>
                     )}

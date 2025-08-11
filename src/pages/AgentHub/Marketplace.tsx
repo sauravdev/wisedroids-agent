@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAgents } from '@/hooks/useAgents';
 import { Bot, Star, Users, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Marketplace() {
   const { agents, loading } = useAgents();
@@ -25,6 +26,7 @@ export function Marketplace() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {publicAgents.map((agent) => (
+              <Link to={`/dashboard`} key={agent.id}>
               <div key={agent.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow p-6">
                 <div className="flex items-start justify-between">
                   <div>
@@ -53,6 +55,7 @@ export function Marketplace() {
                   </button>
                 </div>
               </div>
+              </Link>
             ))}
           </div>
         )}

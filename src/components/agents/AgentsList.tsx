@@ -311,6 +311,7 @@ export function AgentsList() {
                 description: agent.description,
                 status: agent.status,
                 is_public: agent.is_public,
+                user_id: agent.user_id,
                 metrics: agent.metrics as { requests: number; success_rate: number; avg_response_time: number; } | undefined,
                 api_endpoint: agent.api_endpoint || undefined,
                 service_id: agent.service_id || undefined,

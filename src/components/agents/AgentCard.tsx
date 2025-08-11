@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Edit2, Trash2, Play, BarChart2, Rocket, Loader, ActivityIcon, RefreshCw } from 'lucide-react';
-import type { Agent } from '@/lib/supabase/agents';
-import { AgentDeployModal } from './AgentDeployModel';
+import { Edit2, Trash2, Play, BarChart2, Rocket, Loader, ActivityIcon, RefreshCw, Eye } from 'lucide-react';
 import { AgentLogsModal } from './AgentLogsModal';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AgentCardProps {
   agent: {
@@ -12,6 +10,7 @@ interface AgentCardProps {
     description: string;
     status: string;
     is_public: boolean;
+    user_id: string;
     metrics?: {
       requests: number;
       success_rate: number;
@@ -40,6 +39,12 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onRe
   // Remove isDeployModalOpen and modal logic
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
   const metrics = agent.metrics || { requests: 0, success_rate: 0, avg_response_time: 0 };
+  const { user } = useAuth();
+  
+  // Check if this is a public agent (not created by current user)
+  const isPublicAgent = agent.is_public && agent.user_id && agent.user_id !== user?.id;
+  // Check if this is a user-created agent
+  const isUserCreatedAgent = agent.user_id && agent.user_id === user?.id;
 
   // New deploy click: call onDeploy directly
   const handleDeployClick = () => {
@@ -111,7 +116,7 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onRe
         <div>
           <div className="flex items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-900">{agent.name}</h3>
-            {!readOnly && (
+            {!readOnly && isUserCreatedAgent && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onTogglePublic(agent.id, !agent.is_public)}
@@ -125,6 +130,9 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onRe
                 </button>
                 <span className="text-sm text-gray-500">{agent.is_public ? 'Public' : 'Private'}</span>
               </div>
+            )}
+            {isPublicAgent && (
+              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">Public Agent</span>
             )}
           </div>
           <p className="text-sm text-gray-500 mt-1">{agent.description}</p>
@@ -149,66 +157,83 @@ export function AgentCard({ agent, onDelete, onEdit, onAnalytics, onDeploy, onRe
       
       {!readOnly && (
         <div className="mt-4 flex justify-between items-center">
-          <div className="flex gap-2">
-            <button
-              onClick={() => onEdit(agent.id)}
-              className="p-2 text-gray-400 hover:text-gray-600"
-              title="Edit Agent"
-            >
-              <Edit2 className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => onAnalytics(agent.id)}
-              className="p-2 text-gray-400 hover:text-gray-600"
-              title="View Analytics"
-            >
-              <BarChart2 className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => onDelete(agent.id, agent.service_id || null, agent.repo_url || '')}
-              className="p-2 text-red-400 hover:text-red-600"
-              title="Delete Agent"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
-            {agent.service_id && (
-              <button
-                onClick={() => setIsLogsModalOpen(true)}
-                className="p-2 text-blue-400 hover:text-blue-600"
-                title="View Live Logs"
-              >
-                <ActivityIcon className="h-5 w-5" />
-              </button>
-            )}
-          </div>
-          {/* Deploy/Test UI */}
-          {agent.url ? (
-            <div className="flex gap-2">
-              <button
-                onClick={handleReDeployClick}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
-                disabled={isLoading}
-              >
-                {isLoading ? <Loader className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
-                {isLoading ? 'Re-deploying...' : 'Re-deploy'}
-              </button>
-              <button
-                onClick={() => window.open(agent.url, '_blank')}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                <Play className="h-4 w-4" />
-                Test Agent
-              </button>
-            </div>
+          {isUserCreatedAgent ? (
+            <>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onEdit(agent.id)}
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="Edit Agent"
+                >
+                  <Edit2 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => onAnalytics(agent.id)}
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="View Analytics"
+                >
+                  <BarChart2 className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => onDelete(agent.id, agent.service_id || null, agent.repo_url || '')}
+                  className="p-2 text-red-400 hover:text-red-600"
+                  title="Delete Agent"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </button>
+                {agent.service_id && (
+                  <button
+                    onClick={() => setIsLogsModalOpen(true)}
+                    className="p-2 text-blue-400 hover:text-blue-600"
+                    title="View Live Logs"
+                  >
+                    <ActivityIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+              {/* Deploy/Test UI for user-created agents */}
+              {agent.url ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleReDeployClick}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? <Loader className="h-4 w-4" /> : <RefreshCw className="h-4 w-4" />}
+                    {isLoading ? 'Re-deploying...' : 'Re-deploy'}
+                  </button>
+                  <button
+                    onClick={() => window.open(agent.url, '_blank')}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                  >
+                    <Play className="h-4 w-4" />
+                    Test Agent
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleDeployClick}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? <Loader className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
+                  {isLoading ? 'Deploying...' : 'Deploy'}
+                </button>
+              )}
+            </>
           ) : (
-            <button
-              onClick={handleDeployClick}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader className="h-4 w-4" /> : <Rocket className="h-4 w-4" />}
-              {isLoading ? 'Deploying...' : 'Deploy'}
-            </button>
+            /* Public agent - only show View button */
+            <div className="flex gap-2">
+              {agent.url && (
+                <button
+                  onClick={() => window.open(agent.url, '_blank')}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Agent
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Wand2, Play, FileCode } from "lucide-react";
+import { RefreshCw, Wand2, Play, FileCode, Copy, Check } from "lucide-react";
 import { generateAgentCode, enhanceCode, convertCodeToWebAPP } from "@/lib/openai/client";
 // import { executeCode } from '@/lib/code/executor';
 // import { initializePyodide, getInstallationStatus } from '@/lib/pyodide/interpreter';
@@ -56,6 +56,7 @@ export function StepCodeGeneration({
   const [isPyodideReady, setIsPyodideReady] = useState(false);
   const [executionSuccess, setExecutionSuccess] = useState(false);
   const [activeStreamlitTab, setActiveStreamlitTab] = useState<'code' | 'enhancement'>('code');
+  const [copiedError, setCopiedError] = useState(false);
   // const [installationStatus, setInstallationStatus] = useState(getInstallationStatus());
 
   // Reset execution success when code changes from props
@@ -98,6 +99,16 @@ export function StepCodeGeneration({
 
   //   return () => clearInterval(interval);
   // }, [isPyodideReady]);
+
+  const copyErrorToClipboard = async (errorText: string) => {
+    try {
+      await navigator.clipboard.writeText(errorText);
+      setCopiedError(true);
+      setTimeout(() => setCopiedError(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy error:', err);
+    }
+  };
 
   const handleGenerateCode = async () => {
     if (!agentDescription.trim()) {
@@ -366,15 +377,41 @@ export function StepCodeGeneration({
 
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{error}</p>
+            <div className="flex justify-between items-start">
+              <p className="text-sm text-red-600 flex-1">{error}</p>
+              <button
+                onClick={() => copyErrorToClipboard(error)}
+                className="ml-2 p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded transition-colors"
+                title="Copy error to clipboard"
+              >
+                {copiedError ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         )}
 
         {output && (
           <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">
-              Execution Output:
-            </h4>
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium text-gray-900">
+                Execution Output:
+              </h4>
+              <button
+                onClick={() => copyErrorToClipboard(output)}
+                className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                title="Copy output to clipboard"
+              >
+                {copiedError ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             <pre className="text-sm text-gray-600 whitespace-pre-wrap font-mono bg-gray-100 p-3 rounded">
               {output}
             </pre>
