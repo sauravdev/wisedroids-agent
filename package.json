@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "sitemap": "node scripts/generate-sitemap.cjs",
-    "postbuild": "npm run sitemap"
+    "postbuild": "npm run sitemap",
+    "delete-public-agents": "node scripts/delete-public-agents.js"
   },
   "dependencies": {
     "@stripe/stripe-js": "^2.4.0",

@@ -54,7 +54,7 @@ export function Footer() {
             <p className="text-gray-500 text-base">
               Transform your ideas into powerful AI agents with just a text description.
             </p>
-            <div className="flex space-x-6">
+            <div className="flex space-x-6 items-center">
               {navigation.social.map((item) => (
                 <a
                   key={item.name}
@@ -67,6 +67,22 @@ export function Footer() {
                   <item.icon className="h-6 w-6" aria-hidden="true" />
                 </a>
               ))}
+              
+              {/* ProductHunt Badge */}
+              <a 
+                href="https://www.producthunt.com/products/wisedroids?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-wisedroids" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <img 
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1004361&theme=light&t=1755317439485" 
+                  alt="WiseDroids - Transform your ideas into powerful AI agents | Product Hunt" 
+                  style={{ width: '200px', height: '43px' }} 
+                  width="200" 
+                  height="43" 
+                />
+              </a>
             </div>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">

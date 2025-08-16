@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import { WhatsAppChat } from '../WhatsAppChat';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ export function Layout({ children }: LayoutProps) {
       <Header />
       <main className="flex-grow">{children}</main>
       <Footer />
+      <WhatsAppChat />
     </div>
   );
 }
